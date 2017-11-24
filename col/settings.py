@@ -18,24 +18,21 @@ import environ
 logger = logging.getLogger(__name__)
 env = environ.Env()
 
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-
-# Quick-start development settings - unsuitable for production
+# Development settings
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
-
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='secret')
 
 DEBUG = env.bool('DEBUG', default=False)
 if DEBUG:
     logger.warning('DEBUG is enabled!')
 
-
 # Application definition
 INSTALLED_APPS = [
+    'col',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -80,7 +77,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'col.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 # Change 'default' database configuration with $DATABASE_URL.
@@ -89,7 +85,6 @@ DATABASES = {
 }
 if not DATABASES['default']:
     raise RuntimeError('Cannot start without a valid DB connection: {}'.format(DATABASES['default']))
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
