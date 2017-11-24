@@ -19,9 +19,28 @@ class TextAreaToInputMixin(object):
         return formfield
 
 
+class HealthInfoInline(admin.TabularInline):
+    model = models.HealthInfo
+    extra = 1
+    can_delete = False
+
+
+class EmergencyContactInline(admin.TabularInline):
+    model = models.EmergencyContact
+    extra = 1
+    can_delete = False
+
+
+class MembershipInline(admin.TabularInline):
+    model = models.Membership
+    extra = 1
+    can_delete = False
+
+
 @admin.register(models.Participant)
 class ParticipantAdmin(TextAreaToInputMixin, admin.ModelAdmin):
     area_to_input_field_names = ['name', 'surname', 'postcode', 'phone']
+    inlines = [HealthInfoInline, EmergencyContactInline, MembershipInline]
 
     def get_ordering(self, request):
         return ['created_at']
