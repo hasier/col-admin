@@ -16,8 +16,10 @@ class GeneralSetup(Loggable, models.Model):
     valid_from = models.DateField()  # TODO Add validation on clean to ensure no overlap and no period uncovered
     valid_until = models.DateField()
     days_to_vote_since_membership = models.IntegerField()
-    renewal_month = models.IntegerField()
-    renewal_grace_months_period = models.IntegerField()
+    days_to_be_staff_since_membership = models.IntegerField()
+    vote_needs_renewal = models.BooleanField()  # TODO Add validation on clean so if False these fields are mandatory
+    renewal_month = models.IntegerField(null=True)
+    renewal_grace_months_period = models.IntegerField(null=True)
 
 
 class Family(Loggable, models.Model):
@@ -57,7 +59,7 @@ class EmergencyContact(Loggable, models.Model):
     relation = models.TextField()
 
 
-class Tier(models.Model):
+class Tier(Loggable, models.Model):
     name = models.TextField()
     base_amount = models.IntegerField()
     usable_from = models.DateField()

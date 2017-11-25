@@ -39,11 +39,55 @@ class MembershipInline(admin.TabularInline):
 
 @admin.register(models.Participant)
 class ParticipantAdmin(TextAreaToInputMixin, admin.ModelAdmin):
+    date_hierarchy = 'created_at'
     area_to_input_field_names = ['name', 'surname', 'postcode', 'phone']
     inlines = [HealthInfoInline, EmergencyContactInline, MembershipInline]
 
     def get_ordering(self, request):
         return ['created_at']
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(models.Membership)
+class MembershipAdmin(admin.ModelAdmin):
+    date_hierarchy = 'form_filled'
+
+    def get_ordering(self, request):
+        return ['created_at']
+
+    def get_readonly_fields(self, request, obj=None):
+        return self.fields
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(models.Tier)
+class TierAdmin(TextAreaToInputMixin, admin.ModelAdmin):
+    area_to_input_field_names = ['name']
+
+    def get_ordering(self, request):
+        return ['-created_at']
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(models.GeneralSetup)
+class GeneralSetupAdmin(admin.ModelAdmin):
+    def get_ordering(self, request):
+        return ['-created_at']
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
 
     def has_delete_permission(self, request, obj=None):
         return False

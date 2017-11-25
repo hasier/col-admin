@@ -45,8 +45,10 @@ class Migration(migrations.Migration):
                 ('valid_from', models.DateField()),
                 ('valid_until', models.DateField()),
                 ('days_to_vote_since_membership', models.IntegerField()),
-                ('renewal_month', models.IntegerField()),
-                ('renewal_grace_months_period', models.IntegerField()),
+                ('days_to_be_staff_since_membership', models.IntegerField()),
+                ('vote_needs_renewal', models.BooleanField()),
+                ('renewal_month', models.IntegerField(null=True)),
+                ('renewal_grace_months_period', models.IntegerField(null=True)),
             ],
             options={
                 'abstract': False,
@@ -104,12 +106,16 @@ class Migration(migrations.Migration):
             name='Tier',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('name', models.TextField()),
                 ('base_amount', models.IntegerField()),
                 ('usable_from', models.DateField()),
                 ('usable_until', models.DateField(null=True)),
                 ('can_vote', models.BooleanField()),
             ],
+            options={
+                'abstract': False,
+            },
         ),
         migrations.AddField(
             model_name='membership',
