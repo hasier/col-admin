@@ -5,7 +5,7 @@ from django.db.models.fields import TextField
 from django.forms.widgets import TextInput
 
 from col import forms, models
-from col.mixins import ViewColumnMixin, AppendOnlyModel
+from col.mixins import AppendOnlyModel, ViewColumnMixin
 
 
 class TextAreaToInputMixin(object):
@@ -130,6 +130,12 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
         if obj:
             readonly = list(self.readonly_fields)
             if obj.valid_until:
-                readonly.insert(1, 'valid_until')
+                try:
+                    last = models.GeneralSetup.objects.order_by('-created_at')[0]
+                except KeyError:
+                    pass
+                else:
+                    if last.pk != obj.pk:
+                        readonly.insert(1, 'valid_until')
             return readonly
         return []
