@@ -4,7 +4,8 @@ from django.contrib import admin
 from django.db.models.fields import TextField
 from django.forms.widgets import TextInput
 
-from col import models
+from col import forms, models
+from col.mixins import ViewColumnMixin
 
 
 class TextAreaToInputMixin(object):
@@ -98,14 +99,16 @@ class TierAdmin(TextAreaToInputMixin, admin.ModelAdmin):
 
 
 @admin.register(models.GeneralSetup)
-class GeneralSetupAdmin(admin.ModelAdmin):
+class GeneralSetupAdmin(ViewColumnMixin, admin.ModelAdmin):
     actions = None
+    form = forms.GeneralSetupForm
+    exclude = ['valid_from']
 
     def get_ordering(self, request):
         return ['-created_at']
 
     def get_list_display(self, request):
-        return ['id'] + self.get_fields(request)
+        return ['get_view', 'valid_from'] + self.get_fields(request)
 
     def has_add_permission(self, request):
         return request.user.is_superuser
@@ -115,3 +118,9 @@ class GeneralSetupAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return ['days_to_vote_since_membership', 'days_to_be_staff_since_membership',
+                    'vote_allowed_permanently', 'renewal_month', 'renewal_grace_months_period']
+        return []
