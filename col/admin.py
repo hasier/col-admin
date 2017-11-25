@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 from django.contrib import admin
+from django.db.models.fields import TextField
 from django.forms.widgets import TextInput
 
 from col import models
@@ -29,6 +30,12 @@ class EmergencyContactInline(admin.TabularInline):
     model = models.EmergencyContact
     extra = 1
     can_delete = False
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super(EmergencyContactInline, self).formfield_for_dbfield(db_field, request, **kwargs)
+        if isinstance(db_field, TextField):
+            formfield.widget.attrs.update(style='width: 90%;')
+        return formfield
 
 
 class MembershipInline(admin.TabularInline):
