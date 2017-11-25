@@ -44,6 +44,18 @@ class MembershipInline(admin.TabularInline):
     can_delete = False
 
 
+@admin.register(models.Family)
+class FamilyAdmin(admin.ModelAdmin):
+    def get_ordering(self, request):
+        return ['created_at']
+
+    def get_model_perms(self, request):
+        return {}
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(models.Participant)
 class ParticipantAdmin(TextAreaToInputMixin, admin.ModelAdmin):
     date_hierarchy = 'created_at'
