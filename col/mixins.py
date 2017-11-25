@@ -19,13 +19,15 @@ class AppendOnlyModel(object):
     `editable_fields` allows to specify which are the ones that should be available in the add page.
     """
 
+    JUST_SAVE_MODE = 'just_save'
+    HIDE_SUBMIT_LINE_MODE = 'hide_submit_line'
+
     editable_fields = []
+    add_view_submit_mode = JUST_SAVE_MODE
+    change_view_submit_mode = HIDE_SUBMIT_LINE_MODE
 
     def get_editable_fields(self, request, obj=None):
         return self.editable_fields
-
-    def get_readonly_fields(self, request, obj=None):
-        return super(AppendOnlyModel, self).get_readonly_fields(request, obj=obj)
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
         if object_id is not None:
@@ -33,7 +35,7 @@ class AppendOnlyModel(object):
             if 'original' not in extra_context:
                 extra_context['original'] = dict()
             # Add tweaks to the title and to hide all save buttons
-            extra_context['original']['hide_submit_line'] = True
+            extra_context['original'][self.change_view_submit_mode] = True
             extra_context['original'] = ExtraContextOriginalDict(self.get_object(request, unquote(object_id)),
                                                                  **extra_context['original'])
             extra_context['title'] = force_text(self.model._meta.verbose_name)
@@ -51,7 +53,7 @@ class AppendOnlyModel(object):
         if 'original' not in extra_context:
             extra_context['original'] = dict()
         # Add tweaks to just display the save button
-        extra_context['original']['just_save'] = True
+        extra_context['original'][self.add_view_submit_mode] = True
         extra_context['original'] = ExtraContextOriginalDict(None, **extra_context['original'])
         return super(AppendOnlyModel, self).add_view(request, form_url=form_url, extra_context=extra_context)
 

@@ -7,13 +7,6 @@ from col import models
 
 
 class GeneralSetupForm(ModelForm):
-    # def __init__(self, *args, **kwargs):
-    #     super(GeneralSetupForm, self).__init__(*args, **kwargs)
-    #     try:
-    #         models.GeneralSetup.objects.order_by('-created_at')[0]
-    #     except KeyError:
-    #         self.fields['valid_from'].required = False
-
     def clean(self):
         super(GeneralSetupForm, self).clean()
         errors = dict()

@@ -5,7 +5,7 @@ from django.db.models.fields import TextField
 from django.forms.widgets import TextInput
 
 from col import forms, models
-from col.mixins import ViewColumnMixin
+from col.mixins import ViewColumnMixin, AppendOnlyModel
 
 
 class TextAreaToInputMixin(object):
@@ -99,16 +99,18 @@ class TierAdmin(TextAreaToInputMixin, admin.ModelAdmin):
 
 
 @admin.register(models.GeneralSetup)
-class GeneralSetupAdmin(ViewColumnMixin, admin.ModelAdmin):
+class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
     actions = None
     form = forms.GeneralSetupForm
-    exclude = ['valid_from']
+    change_view_submit_mode = AppendOnlyModel.JUST_SAVE_MODE
+    list_display = ['get_view', 'valid_from', 'valid_until', 'days_to_vote_since_membership',
+                    'days_to_be_staff_since_membership', 'vote_allowed_permanently', 'renewal_month',
+                    'renewal_grace_months_period']
+    readonly_fields = ['valid_from', 'days_to_vote_since_membership', 'days_to_be_staff_since_membership',
+                       'vote_allowed_permanently', 'renewal_month', 'renewal_grace_months_period']
 
     def get_ordering(self, request):
         return ['-created_at']
-
-    def get_list_display(self, request):
-        return ['get_view', 'valid_from'] + self.get_fields(request)
 
     def has_add_permission(self, request):
         return request.user.is_superuser
@@ -119,8 +121,15 @@ class GeneralSetupAdmin(ViewColumnMixin, admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def get_exclude(self, request, obj=None):
+        if obj:
+            return []
+        return ['valid_from']
+
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ['days_to_vote_since_membership', 'days_to_be_staff_since_membership',
-                    'vote_allowed_permanently', 'renewal_month', 'renewal_grace_months_period']
+            readonly = list(self.readonly_fields)
+            if obj.valid_until:
+                readonly.insert(1, 'valid_until')
+            return readonly
         return []
