@@ -130,12 +130,8 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
         if obj:
             readonly = list(self.readonly_fields)
             if obj.valid_until:
-                try:
-                    last = models.GeneralSetup.objects.order_by('-created_at')[0]
-                except KeyError:
-                    pass
-                else:
-                    if last.pk != obj.pk:
-                        readonly.insert(1, 'valid_until')
+                last = models.GeneralSetup.get_last()
+                if last and last.pk != obj.pk:
+                    readonly.insert(1, 'valid_until')
             return readonly
         return []

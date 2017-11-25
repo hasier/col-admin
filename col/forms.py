@@ -18,16 +18,27 @@ class GeneralSetupForm(ModelForm):
                 if value is None:
                     errors[field_name] = Field.default_error_messages['required']
 
-        try:
-            last = models.GeneralSetup.objects.order_by('-created_at')[0]
-        except IndexError:
-            self.instance.valid_from = datetime.now(timezone.utc)
+        if self.instance.pk:
+            valid_from = self.instance.valid_from
         else:
-            if last.pk != self.instance.pk:
-                if not last.valid_until:
-                    errors['valid_until'] = 'Cannot add a new setup until the previous is closed'
-                else:
-                    self.instance.valid_from = last.valid_until
+            valid_from = self.cleaned_data.get('valid_from')
+        valid_until = self.cleaned_data.get('valid_until')
+        if valid_until and valid_until < valid_from:
+            errors['valid_until'] = 'The end date must happen later than the beginning'
+        else:
+            last = models.GeneralSetup.get_last()
+            if last:
+                if last.pk != self.instance.pk:
+                    # If there is a previous GeneralSetup and it is not the currently edited instance...
+                    if not last.valid_until:
+                        # We validate that the previous GeneralSetup needs to be closed first
+                        errors['valid_until'] = 'Cannot add a new setup until the previous is closed'
+                    else:
+                        # Otherwise, the current valid_from is taken from the last day for the last GeneralSetup
+                        self.instance.valid_from = last.valid_until
+            else:
+                # If there is no previous GeneralSetup, the current valid_from is now
+                self.instance.valid_from = datetime.now(timezone.utc)
 
         if errors:
             raise ValidationError(errors)

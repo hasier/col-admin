@@ -1,6 +1,8 @@
-from django.db import models
 from datetime import datetime, timezone
+
 from dateutil.relativedelta import relativedelta
+from django.db import models
+from memoize import delete_memoized, memoize
 
 from col.constants import PAYMENT_METHODS
 
@@ -20,6 +22,19 @@ class GeneralSetup(Loggable, models.Model):
     vote_allowed_permanently = models.BooleanField()
     renewal_month = models.PositiveIntegerField(null=True, blank=True)
     renewal_grace_months_period = models.PositiveIntegerField(null=True, blank=True)
+
+    @classmethod
+    @memoize(3600)
+    def get_last(cls):
+        try:
+            return cls.objects.order_by('-created_at')[0]
+        except KeyError:
+            return None
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        delete_memoized(self.get_last)
+        return super(GeneralSetup, self).save(force_insert=force_insert, force_update=force_update, using=using,
+                                              update_fields=update_fields)
 
 
 class Family(Loggable, models.Model):
