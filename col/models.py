@@ -40,6 +40,9 @@ class GeneralSetup(Loggable, models.Model):
 class Family(Loggable, models.Model):
     family_name = models.TextField()
 
+    def __repr__(self):
+        return self.family_name
+
 
 class Participant(Loggable, models.Model):
     name = models.TextField()
@@ -58,6 +61,9 @@ class Participant(Loggable, models.Model):
     @property
     def age(self):
         return relativedelta(datetime.now(timezone.utc), self.date_of_birth).years
+
+    def __repr__(self):
+        return '{} {}'.format(self.name, self.surname)
 
 
 class HealthInfo(Loggable, models.Model):

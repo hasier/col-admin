@@ -46,12 +46,22 @@ class MembershipInline(admin.TabularInline):
 
 
 @admin.register(models.Family)
-class FamilyAdmin(admin.ModelAdmin):
+class FamilyAdmin(TextAreaToInputMixin, admin.ModelAdmin):
+    actions = None
+    area_to_input_field_names = ['family_name']
+    list_display = ['family_name', 'get_family_members']
+    readonly_fields = ['get_family_members']
+
+    def get_family_members(self, obj):
+        return ','.join((repr(o) for o in obj.family_members.all()))
+
+    get_family_members.short_description = 'Family members'
+
     def get_ordering(self, request):
         return ['created_at']
 
-    def get_model_perms(self, request):
-        return {}
+    def get_queryset(self, request):
+        return super(FamilyAdmin, self).get_queryset(request).prefetch_related('family_members')
 
     def has_delete_permission(self, request, obj=None):
         return False
