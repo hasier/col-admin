@@ -58,7 +58,7 @@ class MembershipAdmin(admin.ModelAdmin):
         return ['created_at']
 
     def get_readonly_fields(self, request, obj=None):
-        return self.fields
+        return self.get_fields(request)
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -80,8 +80,13 @@ class TierAdmin(TextAreaToInputMixin, admin.ModelAdmin):
 
 @admin.register(models.GeneralSetup)
 class GeneralSetupAdmin(admin.ModelAdmin):
+    actions = None
+
     def get_ordering(self, request):
         return ['-created_at']
+
+    def get_list_display(self, request):
+        return ['id'] + self.get_fields(request)
 
     def has_add_permission(self, request):
         return request.user.is_superuser

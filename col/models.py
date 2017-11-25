@@ -14,10 +14,10 @@ class Loggable(models.Model):
 
 class GeneralSetup(Loggable, models.Model):
     valid_from = models.DateField()  # TODO Add validation on clean to ensure no overlap and no period uncovered
-    valid_until = models.DateField()
+    valid_until = models.DateField(null=True, blank=True)
     days_to_vote_since_membership = models.PositiveIntegerField()
     days_to_be_staff_since_membership = models.PositiveIntegerField()
-    vote_needs_renewal = models.BooleanField()  # TODO Add validation on clean so if False these fields are mandatory
+    vote_allowed_permanently = models.BooleanField()  # TODO Add validation on clean so if False, fields are mandatory
     renewal_month = models.PositiveIntegerField(null=True, blank=True)
     renewal_grace_months_period = models.PositiveIntegerField(null=True, blank=True)
 
