@@ -44,11 +44,11 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('valid_from', models.DateField()),
                 ('valid_until', models.DateField()),
-                ('days_to_vote_since_membership', models.IntegerField()),
-                ('days_to_be_staff_since_membership', models.IntegerField()),
+                ('days_to_vote_since_membership', models.PositiveIntegerField()),
+                ('days_to_be_staff_since_membership', models.PositiveIntegerField()),
                 ('vote_needs_renewal', models.BooleanField()),
-                ('renewal_month', models.IntegerField(null=True)),
-                ('renewal_grace_months_period', models.IntegerField(null=True)),
+                ('renewal_month', models.PositiveIntegerField(null=True, blank=True)),
+                ('renewal_grace_months_period', models.PositiveIntegerField(null=True, blank=True)),
             ],
             options={
                 'abstract': False,
@@ -59,8 +59,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('height', models.IntegerField(null=True)),
-                ('weight', models.IntegerField(null=True)),
+                ('height', models.PositiveIntegerField(null=True, blank=True)),
+                ('weight', models.PositiveIntegerField(null=True, blank=True)),
                 ('info', models.TextField()),
             ],
             options={
@@ -72,11 +72,11 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('effective_for_year', models.IntegerField()),
+                ('effective_for_year', models.PositiveIntegerField()),
                 ('form_filled', models.DateField()),
                 ('paid', models.DateField()),
-                ('amount_paid', models.IntegerField()),
-                ('payment_method', models.IntegerField(choices=[(1, 'Cash'), (2, 'Bank transfer')])),
+                ('amount_paid', models.PositiveIntegerField()),
+                ('payment_method', models.PositiveIntegerField(choices=[(1, 'Cash'), (2, 'Bank transfer')])),
             ],
             options={
                 'abstract': False,
@@ -108,9 +108,9 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('name', models.TextField()),
-                ('base_amount', models.IntegerField()),
+                ('base_amount', models.PositiveIntegerField()),
                 ('usable_from', models.DateField()),
-                ('usable_until', models.DateField(null=True)),
+                ('usable_until', models.DateField(null=True, blank=True)),
                 ('can_vote', models.BooleanField()),
             ],
             options={

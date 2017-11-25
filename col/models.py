@@ -15,11 +15,11 @@ class Loggable(models.Model):
 class GeneralSetup(Loggable, models.Model):
     valid_from = models.DateField()  # TODO Add validation on clean to ensure no overlap and no period uncovered
     valid_until = models.DateField()
-    days_to_vote_since_membership = models.IntegerField()
-    days_to_be_staff_since_membership = models.IntegerField()
+    days_to_vote_since_membership = models.PositiveIntegerField()
+    days_to_be_staff_since_membership = models.PositiveIntegerField()
     vote_needs_renewal = models.BooleanField()  # TODO Add validation on clean so if False these fields are mandatory
-    renewal_month = models.IntegerField(null=True)
-    renewal_grace_months_period = models.IntegerField(null=True)
+    renewal_month = models.PositiveIntegerField(null=True, blank=True)
+    renewal_grace_months_period = models.PositiveIntegerField(null=True, blank=True)
 
 
 class Family(Loggable, models.Model):
@@ -47,8 +47,8 @@ class Participant(Loggable, models.Model):
 
 class HealthInfo(Loggable, models.Model):
     participant = models.ForeignKey(Participant, on_delete=models.PROTECT, related_name='health_info')
-    height = models.IntegerField(null=True)
-    weight = models.IntegerField(null=True)
+    height = models.PositiveIntegerField(null=True, blank=True)
+    weight = models.PositiveIntegerField(null=True, blank=True)
     info = models.TextField()
 
 
@@ -61,9 +61,9 @@ class EmergencyContact(Loggable, models.Model):
 
 class Tier(Loggable, models.Model):
     name = models.TextField()
-    base_amount = models.IntegerField()
+    base_amount = models.PositiveIntegerField()
     usable_from = models.DateField()
-    usable_until = models.DateField(null=True)
+    usable_until = models.DateField(null=True, blank=True)
     can_vote = models.BooleanField()
 
     def is_usable_for(self, year):
@@ -74,8 +74,8 @@ class Membership(Loggable, models.Model):
     # TODO Add validation on clean to disable creation if < days_to_vote_since_membership
     tier = models.ForeignKey(Tier, on_delete=models.PROTECT, related_name='memberships')
     participant = models.ForeignKey(Participant, on_delete=models.PROTECT, related_name='memberships')
-    effective_for_year = models.IntegerField()  # TODO Add validation on clean to check it matches with tier
+    effective_for_year = models.PositiveIntegerField()  # TODO Add validation on clean to check it matches with tier
     form_filled = models.DateField()
     paid = models.DateField()
-    amount_paid = models.IntegerField()
-    payment_method = models.IntegerField(choices=PAYMENT_METHODS.items())
+    amount_paid = models.PositiveIntegerField()
+    payment_method = models.PositiveIntegerField(choices=PAYMENT_METHODS.items())
