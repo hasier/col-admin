@@ -1,0 +1,13 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ _('Castellers of London admin') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name" style="min-height: 100px;"><a href="{% url 'admin:index' %}">
+    <img src="{% static "CoL_Logo.png" %}" style="max-width: 100px;" alt="CoL Logo"/>&nbsp;
+    {{ 'Castellers of London' }}</a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
