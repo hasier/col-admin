@@ -18,7 +18,6 @@ class GeneralSetup(Loggable, models.Model):
     valid_from = models.DateField()
     valid_until = models.DateField(null=True, blank=True)
     days_to_vote_since_membership = models.PositiveIntegerField()
-    days_to_be_staff_since_membership = models.PositiveIntegerField()
     vote_allowed_permanently = models.BooleanField()
     renewal_month = models.PositiveIntegerField(null=True, blank=True)
     renewal_grace_months_period = models.PositiveIntegerField(null=True, blank=True)
@@ -93,11 +92,10 @@ class Tier(Loggable, models.Model):
 
 
 class Membership(Loggable, models.Model):
-    # TODO Add validation on clean to disable creation if < days_to_vote_since_membership
     tier = models.ForeignKey(Tier, on_delete=models.PROTECT, related_name='memberships')
     participant = models.ForeignKey(Participant, on_delete=models.PROTECT, related_name='memberships')
     effective_for_year = models.PositiveIntegerField()  # TODO Add validation on clean to check it matches with tier
     form_filled = models.DateField()
-    paid = models.DateField()
+    paid = models.DateField(null=True, blank=True)
     amount_paid = models.PositiveIntegerField()
     payment_method = models.PositiveIntegerField(choices=PAYMENT_METHODS.items())

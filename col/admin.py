@@ -4,7 +4,8 @@ from django.contrib import admin
 from django.db.models.fields import TextField
 
 from col import forms, models
-from col.forms import ParticipantForm, RequiredOnceInlineFormSet
+from col.forms import ParticipantForm
+from col.formsets import RequiredOnceInlineFormSet
 from col.mixins import AppendOnlyModel, TextAreaToInputMixin, ViewColumnMixin
 
 
@@ -105,10 +106,9 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
     form = forms.GeneralSetupForm
     change_view_submit_mode = AppendOnlyModel.JUST_SAVE_MODE
     list_display = ['get_view', 'valid_from', 'valid_until', 'days_to_vote_since_membership',
-                    'days_to_be_staff_since_membership', 'vote_allowed_permanently', 'renewal_month',
-                    'renewal_grace_months_period']
-    readonly_fields = ['valid_from', 'days_to_vote_since_membership', 'days_to_be_staff_since_membership',
-                       'vote_allowed_permanently', 'renewal_month', 'renewal_grace_months_period']
+                    'vote_allowed_permanently', 'renewal_month', 'renewal_grace_months_period']
+    readonly_fields = ['valid_from', 'days_to_vote_since_membership', 'vote_allowed_permanently', 'renewal_month',
+                       'renewal_grace_months_period']
 
     def get_ordering(self, request):
         return ['-created_at']
