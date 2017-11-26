@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('name', models.TextField()),
+                ('full_name', models.TextField()),
                 ('phone', models.TextField()),
                 ('relation', models.TextField()),
             ],
@@ -73,7 +73,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('effective_for_year', models.PositiveIntegerField()),
+                ('effective_from', models.DateField()),
                 ('form_filled', models.DateField()),
                 ('paid', models.DateField(null=True, blank=True)),
                 ('amount_paid', models.PositiveIntegerField()),
@@ -114,6 +114,7 @@ class Migration(migrations.Migration):
                 ('usable_from', models.DateField()),
                 ('usable_until', models.DateField(null=True, blank=True)),
                 ('can_vote', models.BooleanField()),
+                ('expires', models.BooleanField()),
             ],
             options={
                 'abstract': False,
@@ -147,6 +148,11 @@ class Migration(migrations.Migration):
             name='tier',
             field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='memberships',
                                     to='col.Tier'),
+        ),
+        migrations.AddField(
+            model_name='tier',
+            name='allowed_member_types',
+            field=models.ManyToManyField(to='col.MemberType'),
         ),
         migrations.AddField(
             model_name='healthinfo',

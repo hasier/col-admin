@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.db.models.fields import TextField
 
 from col import forms, models
-from col.forms import ParticipantForm
+from col.forms import ParticipantForm, MembershipForm
 from col.formsets import RequiredOnceInlineFormSet
 from col.mixins import AppendOnlyModel, TextAreaToInputMixin, ViewColumnMixin
 
@@ -18,7 +18,7 @@ class HealthInfoInline(admin.TabularInline):
 class EmergencyContactInline(TextAreaToInputMixin, admin.TabularInline):
     model = models.EmergencyContact
     formset = RequiredOnceInlineFormSet
-    area_to_input_field_names = ['name', 'phone', 'relation']
+    area_to_input_field_names = ['full_name', 'phone', 'relation']
     extra = 1
     can_delete = False
 
@@ -31,6 +31,7 @@ class EmergencyContactInline(TextAreaToInputMixin, admin.TabularInline):
 
 class MembershipInline(TextAreaToInputMixin, admin.TabularInline):
     model = models.Membership
+    form = MembershipForm
     area_to_input_field_names = ['notes']
     extra = 1
     can_delete = False

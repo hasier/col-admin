@@ -79,9 +79,19 @@ class HealthInfo(Loggable, models.Model):
 
 class EmergencyContact(Loggable, models.Model):
     participant = models.ForeignKey(Participant, on_delete=models.PROTECT, related_name='emergency_contacts')
-    name = models.TextField()
+    full_name = models.TextField()
     phone = models.TextField()
     relation = models.TextField()
+
+    def __str__(self):
+        return self.full_name
+
+
+class MemberType(Loggable, models.Model):
+    type_name = models.TextField()
+
+    def __str__(self):
+        return self.type_name
 
 
 class Tier(Loggable, models.Model):
@@ -90,20 +100,21 @@ class Tier(Loggable, models.Model):
     usable_from = models.DateField()
     usable_until = models.DateField(null=True, blank=True)
     can_vote = models.BooleanField()
+    expires = models.BooleanField()
+    allowed_member_types = models.ManyToManyField(MemberType)
 
-    def is_usable_for(self, year):
-        return self.usable_from.year <= year and (self.usable_until is None or self.usable_until.year >= year)
+    def is_usable_for(self, ref_date):
+        return self.usable_from <= ref_date and (self.usable_until is None or self.usable_until >= ref_date)
 
-
-class MemberType(Loggable, models.Model):
-    type_name = models.TextField()
+    def __str__(self):
+        return self.name
 
 
 class Membership(Loggable, models.Model):
     tier = models.ForeignKey(Tier, on_delete=models.PROTECT, related_name='memberships')
     member_type = models.ForeignKey(MemberType, on_delete=models.PROTECT, related_name='memberships')
     participant = models.ForeignKey(Participant, on_delete=models.PROTECT, related_name='memberships')
-    effective_for_year = models.PositiveIntegerField()  # TODO Add validation on clean to check it matches with tier
+    effective_from = models.DateField()
     form_filled = models.DateField()
     paid = models.DateField(null=True, blank=True)
     amount_paid = models.PositiveIntegerField()
