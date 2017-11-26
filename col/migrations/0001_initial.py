@@ -35,6 +35,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
+                'verbose_name_plural': 'families',
             },
         ),
         migrations.CreateModel(
@@ -45,6 +46,7 @@ class Migration(migrations.Migration):
                 ('valid_from', models.DateField()),
                 ('valid_until', models.DateField(null=True, blank=True)),
                 ('days_to_vote_since_membership', models.PositiveIntegerField()),
+                ('minimum_age_to_vote', models.PositiveIntegerField()),
                 ('vote_allowed_permanently', models.BooleanField()),
                 ('renewal_month', models.PositiveIntegerField(null=True, blank=True)),
                 ('renewal_grace_months_period', models.PositiveIntegerField(null=True, blank=True)),
@@ -76,6 +78,7 @@ class Migration(migrations.Migration):
                 ('paid', models.DateField(null=True, blank=True)),
                 ('amount_paid', models.PositiveIntegerField()),
                 ('payment_method', models.PositiveIntegerField(choices=[(1, 'Cash'), (2, 'Bank transfer')])),
+                ('notes', models.TextField(null=True, blank=True)),
             ],
             options={
                 'abstract': False,
@@ -116,11 +119,28 @@ class Migration(migrations.Migration):
                 'abstract': False,
             },
         ),
+        migrations.CreateModel(
+            name='MemberType',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('type_name', models.TextField()),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
         migrations.AddField(
             model_name='membership',
             name='participant',
             field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='memberships',
                                     to='col.Participant'),
+        ),
+        migrations.AddField(
+            model_name='membership',
+            name='member_type',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='memberships',
+                                    to='col.MemberType'),
         ),
         migrations.AddField(
             model_name='membership',

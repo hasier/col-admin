@@ -29,8 +29,9 @@ class EmergencyContactInline(TextAreaToInputMixin, admin.TabularInline):
         return formfield
 
 
-class MembershipInline(admin.TabularInline):
+class MembershipInline(TextAreaToInputMixin, admin.TabularInline):
     model = models.Membership
+    area_to_input_field_names = ['notes']
     extra = 1
     can_delete = False
 
@@ -92,6 +93,17 @@ class MembershipAdmin(admin.ModelAdmin):
 @admin.register(models.Tier)
 class TierAdmin(TextAreaToInputMixin, admin.ModelAdmin):
     area_to_input_field_names = ['name']
+
+    def get_ordering(self, request):
+        return ['-created_at']
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(models.MemberType)
+class MemberTypeAdmin(TextAreaToInputMixin, admin.ModelAdmin):
+    area_to_input_field_names = ['type_name']
 
     def get_ordering(self, request):
         return ['-created_at']

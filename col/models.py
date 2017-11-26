@@ -18,6 +18,7 @@ class GeneralSetup(Loggable, models.Model):
     valid_from = models.DateField()
     valid_until = models.DateField(null=True, blank=True)
     days_to_vote_since_membership = models.PositiveIntegerField()
+    minimum_age_to_vote = models.PositiveIntegerField()
     vote_allowed_permanently = models.BooleanField()
     renewal_month = models.PositiveIntegerField(null=True, blank=True)
     renewal_grace_months_period = models.PositiveIntegerField(null=True, blank=True)
@@ -37,6 +38,9 @@ class GeneralSetup(Loggable, models.Model):
 
 
 class Family(Loggable, models.Model):
+    class Meta:
+        verbose_name_plural = 'families'
+
     family_name = models.TextField()
 
     def __str__(self):
@@ -91,11 +95,17 @@ class Tier(Loggable, models.Model):
         return self.usable_from.year <= year and (self.usable_until is None or self.usable_until.year >= year)
 
 
+class MemberType(Loggable, models.Model):
+    type_name = models.TextField()
+
+
 class Membership(Loggable, models.Model):
     tier = models.ForeignKey(Tier, on_delete=models.PROTECT, related_name='memberships')
+    member_type = models.ForeignKey(MemberType, on_delete=models.PROTECT, related_name='memberships')
     participant = models.ForeignKey(Participant, on_delete=models.PROTECT, related_name='memberships')
     effective_for_year = models.PositiveIntegerField()  # TODO Add validation on clean to check it matches with tier
     form_filled = models.DateField()
     paid = models.DateField(null=True, blank=True)
     amount_paid = models.PositiveIntegerField()
     payment_method = models.PositiveIntegerField(choices=PAYMENT_METHODS.items())
+    notes = models.TextField(null=True, blank=True)
