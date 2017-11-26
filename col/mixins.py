@@ -1,4 +1,5 @@
 from django.contrib.admin.utils import unquote
+from django.forms.widgets import TextInput
 from django.utils.encoding import force_text
 
 from col.utils import ExtraContextOriginalDict
@@ -9,6 +10,19 @@ class ViewColumnMixin(object):
         return 'View'
     get_view.short_description = ''
     get_view.admin_order_field = None
+
+
+class TextAreaToInputMixin(object):
+    area_to_input_field_names = []
+
+    def get_area_to_input_field_names(self):
+        return self.area_to_input_field_names
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super(TextAreaToInputMixin, self).formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name in self.get_area_to_input_field_names():
+            formfield.widget = TextInput(attrs=formfield.widget.attrs)
+        return formfield
 
 
 class AppendOnlyModel(object):

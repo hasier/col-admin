@@ -40,7 +40,7 @@ class GeneralSetup(Loggable, models.Model):
 class Family(Loggable, models.Model):
     family_name = models.TextField()
 
-    def __repr__(self):
+    def __str__(self):
         return self.family_name
 
 
@@ -48,21 +48,22 @@ class Participant(Loggable, models.Model):
     name = models.TextField()
     surname = models.TextField()
     date_of_birth = models.DateField()
-    # TODO If age < 18, add validation on clean to ensure family != None and there are adults in family
-    family = models.ForeignKey(Family, null=True, on_delete=models.PROTECT, related_name='family_members')
-    # TODO If age > 18, add validation on clean to ensure these fields are not blank
+    family = models.ForeignKey(Family, null=True, blank=True, on_delete=models.PROTECT, related_name='family_members')
     address = models.TextField(blank=True)
     postcode = models.TextField(blank=True)
     phone = models.TextField(blank=True)
     email = models.EmailField(blank=True)
     participation_form_filled = models.DateField()
-    # TODO Make sure we can enforce having at least one EmergencyContact
 
     @property
     def age(self):
-        return relativedelta(datetime.now(timezone.utc), self.date_of_birth).years
+        return relativedelta(datetime.now(timezone.utc).date(), self.date_of_birth).years
 
-    def __repr__(self):
+    @property
+    def is_under_aged(self):
+        return self.age < 18
+
+    def __str__(self):
         return '{} {}'.format(self.name, self.surname)
 
 

@@ -2,23 +2,10 @@ from __future__ import absolute_import, unicode_literals
 
 from django.contrib import admin
 from django.db.models.fields import TextField
-from django.forms.widgets import TextInput
 
 from col import forms, models
-from col.mixins import AppendOnlyModel, ViewColumnMixin
-
-
-class TextAreaToInputMixin(object):
-    area_to_input_field_names = []
-
-    def get_area_to_input_field_names(self):
-        return self.area_to_input_field_names
-
-    def formfield_for_dbfield(self, db_field, request, **kwargs):
-        formfield = super(TextAreaToInputMixin, self).formfield_for_dbfield(db_field, request, **kwargs)
-        if db_field.name in self.get_area_to_input_field_names():
-            formfield.widget = TextInput(attrs=formfield.widget.attrs)
-        return formfield
+from col.forms import ParticipantForm, RequiredOnceInlineFormSet
+from col.mixins import AppendOnlyModel, TextAreaToInputMixin, ViewColumnMixin
 
 
 class HealthInfoInline(admin.TabularInline):
@@ -27,8 +14,10 @@ class HealthInfoInline(admin.TabularInline):
     can_delete = False
 
 
-class EmergencyContactInline(admin.TabularInline):
+class EmergencyContactInline(TextAreaToInputMixin, admin.TabularInline):
     model = models.EmergencyContact
+    formset = RequiredOnceInlineFormSet
+    area_to_input_field_names = ['name', 'phone', 'relation']
     extra = 1
     can_delete = False
 
@@ -69,6 +58,8 @@ class FamilyAdmin(TextAreaToInputMixin, admin.ModelAdmin):
 
 @admin.register(models.Participant)
 class ParticipantAdmin(TextAreaToInputMixin, admin.ModelAdmin):
+    actions = None
+    form = ParticipantForm
     date_hierarchy = 'created_at'
     area_to_input_field_names = ['name', 'surname', 'postcode', 'phone']
     inlines = [HealthInfoInline, EmergencyContactInline, MembershipInline]

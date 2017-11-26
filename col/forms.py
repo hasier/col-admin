@@ -1,9 +1,26 @@
 from datetime import datetime, timezone
+
 from django.core.exceptions import ValidationError
 from django.forms import ModelForm
 from django.forms.fields import Field
+from django.forms.models import BaseInlineFormSet
 
 from col import models
+
+
+class RequiredOnceInlineFormSet(BaseInlineFormSet):
+    """
+    Generates an inline formset that is required
+    """
+
+    def _construct_form(self, i, **kwargs):
+        """
+        Override the method to change the form attribute empty_permitted
+        """
+        form = super(RequiredOnceInlineFormSet, self)._construct_form(i, **kwargs)
+        if not self.queryset.count():
+            form.empty_permitted = False
+        return form
 
 
 class GeneralSetupForm(ModelForm):
@@ -13,7 +30,7 @@ class GeneralSetupForm(ModelForm):
         if 'vote_allowed_permanently' in self.cleaned_data and not self.cleaned_data['vote_allowed_permanently']:
             for field_name, value in (
                     ('renewal_month', self.cleaned_data.get('renewal_month')),
-                    ('renewal_grace_months_period', self.cleaned_data.get('renewal_grace_months_period'))
+                    ('renewal_grace_months_period', self.cleaned_data.get('renewal_grace_months_period')),
             ):
                 if value is None:
                     errors[field_name] = Field.default_error_messages['required']
@@ -39,6 +56,38 @@ class GeneralSetupForm(ModelForm):
             else:
                 # If there is no previous GeneralSetup, the current valid_from is now
                 self.instance.valid_from = datetime.now(timezone.utc)
+
+        if errors:
+            raise ValidationError(errors)
+
+        return self.cleaned_data
+
+
+class ParticipantForm(ModelForm):
+    def clean(self):
+        super(ParticipantForm, self).clean()
+        errors = dict()
+        self.instance.date_of_birth = self.cleaned_data['date_of_birth']
+        if self.instance.is_under_aged:
+            if self.cleaned_data.get('family'):
+                for participant in self.cleaned_data['family'].family_members.all():
+                    if not participant.is_under_aged:
+                        break
+                else:
+                    errors['family'] = 'An under aged participant must belong to a family ' \
+                                       'with at least one adult participant'
+            else:
+                errors['family'] = 'An under aged participant must belong to a family, ' \
+                                   'and the family must have at least one adult participant'
+        else:
+            for field_name, value in (
+                    ('address', self.cleaned_data.get('address')),
+                    ('postcode', self.cleaned_data.get('postcode')),
+                    ('phone', self.cleaned_data.get('phone')),
+                    ('email', self.cleaned_data.get('email')),
+            ):
+                if value is None:
+                    errors[field_name] = Field.default_error_messages['required']
 
         if errors:
             raise ValidationError(errors)
