@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.db.models.fields import TextField
 
 from col import forms, models
-from col.forms import ParticipantForm, MembershipForm
+from col.forms import MembershipForm, ParticipantForm
 from col.formsets import RequiredOnceInlineFormSet
 from col.mixins import AppendOnlyModel, TextAreaToInputMixin, ViewColumnMixin
 
@@ -58,6 +58,11 @@ class FamilyAdmin(TextAreaToInputMixin, admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return self.readonly_fields
+        return []
+
 
 @admin.register(models.Participant)
 class ParticipantAdmin(TextAreaToInputMixin, admin.ModelAdmin):
@@ -75,14 +80,14 @@ class ParticipantAdmin(TextAreaToInputMixin, admin.ModelAdmin):
 
 
 @admin.register(models.Membership)
-class MembershipAdmin(admin.ModelAdmin):
+class MembershipAdmin(AppendOnlyModel, admin.ModelAdmin):
     date_hierarchy = 'form_filled'
+    readonly_fields = ['tier', 'member_type', 'participant', 'effective_from', 'form_filled', 'paid', 'amount_paid',
+                       'payment_method']
+    change_view_submit_mode = AppendOnlyModel.JUST_SAVE_MODE
 
     def get_ordering(self, request):
         return ['created_at']
-
-    def get_readonly_fields(self, request, obj=None):
-        return self.get_fields(request)
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -105,6 +110,7 @@ class TierAdmin(TextAreaToInputMixin, admin.ModelAdmin):
 @admin.register(models.MemberType)
 class MemberTypeAdmin(TextAreaToInputMixin, admin.ModelAdmin):
     area_to_input_field_names = ['type_name']
+    list_display = ['type_name', 'notes']
 
     def get_ordering(self, request):
         return ['-created_at']

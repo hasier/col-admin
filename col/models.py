@@ -89,6 +89,7 @@ class EmergencyContact(Loggable, models.Model):
 
 class MemberType(Loggable, models.Model):
     type_name = models.TextField()
+    notes = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.type_name
@@ -120,3 +121,6 @@ class Membership(Loggable, models.Model):
     amount_paid = models.PositiveIntegerField()
     payment_method = models.PositiveIntegerField(choices=PAYMENT_METHODS.items())
     notes = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return '{} membership for {}'.format(self.effective_from, self.participant)

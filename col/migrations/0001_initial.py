@@ -126,6 +126,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('type_name', models.TextField()),
+                ('notes', models.TextField(blank=True, null=True)),
             ],
             options={
                 'abstract': False,
