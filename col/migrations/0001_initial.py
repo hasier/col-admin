@@ -111,7 +111,6 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('name', models.TextField()),
-                ('base_amount', models.PositiveIntegerField()),
                 ('usable_from', models.DateField()),
                 ('usable_until', models.DateField(null=True, blank=True)),
                 ('can_vote', models.BooleanField()),
@@ -133,6 +132,20 @@ class Migration(migrations.Migration):
                 'abstract': False,
             },
         ),
+        migrations.CreateModel(
+            name='MemberTypeTier',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('base_amount', models.PositiveIntegerField()),
+                ('member_type',
+                 models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='membership_combinations',
+                                   to='col.MemberType')),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
         migrations.AddField(
             model_name='membership',
             name='participant',
@@ -143,18 +156,7 @@ class Migration(migrations.Migration):
             model_name='membership',
             name='member_type',
             field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='memberships',
-                                    to='col.MemberType'),
-        ),
-        migrations.AddField(
-            model_name='membership',
-            name='tier',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='memberships',
-                                    to='col.Tier'),
-        ),
-        migrations.AddField(
-            model_name='tier',
-            name='allowed_member_types',
-            field=models.ManyToManyField(to='col.MemberType'),
+                                    to='col.MemberTypeTier'),
         ),
         migrations.AddField(
             model_name='healthinfo',
@@ -167,5 +169,10 @@ class Migration(migrations.Migration):
             name='participant',
             field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='emergency_contacts',
                                     to='col.Participant'),
+        ),
+        migrations.AddField(
+            model_name='membertypetier',
+            name='tier',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='membership_combinations', to='col.Tier'),
         ),
     ]

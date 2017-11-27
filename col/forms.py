@@ -80,15 +80,13 @@ class ParticipantForm(ModelForm):
         return self.cleaned_data
 
 
-class MembershipForm(ModelForm):
+class InlineMembershipForm(ModelForm):
     def clean(self):
-        super(MembershipForm, self).clean()
+        super(InlineMembershipForm, self).clean()
         errors = dict()
-        if not self.cleaned_data['tier'].is_usable_for(self.cleaned_data['effective_from']):
+        if 'member_type' in self.cleaned_data and \
+                not self.cleaned_data['member_type'].is_usable_for(self.cleaned_data['effective_from']):
             errors['effective_from'] = 'The selected tier is not available for this period'
-
-        if self.cleaned_data['member_type'] not in self.cleaned_data['tier'].allowed_member_types.all():
-            errors['member_type'] = 'This member type is not allowed in the selected tier'
 
         if errors:
             raise ValidationError(errors)

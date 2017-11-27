@@ -1,10 +1,13 @@
 from __future__ import absolute_import, unicode_literals
 
+from datetime import datetime, timezone
+
 from django.contrib import admin
+from django.contrib.admin.helpers import InlineAdminFormSet
 from django.db.models.fields import TextField
 
 from col import forms, models
-from col.forms import MembershipForm, ParticipantForm
+from col.forms import InlineMembershipForm, ParticipantForm
 from col.formsets import RequiredOnceInlineFormSet
 from col.mixins import AppendOnlyModel, TextAreaToInputMixin, ViewColumnMixin
 
@@ -30,8 +33,19 @@ class EmergencyContactInline(TextAreaToInputMixin, admin.TabularInline):
 
 
 class MembershipInline(TextAreaToInputMixin, admin.TabularInline):
+    class MembershipInlineFormSet(InlineAdminFormSet):
+        def __iter__(self):
+            for form in super(MembershipInline.MembershipInlineFormSet, self).__iter__():
+                if form.original:
+                    readonly = ('member_type', 'participant', 'effective_from', 'form_filled', 'amount_paid',
+                                'payment_method')
+                    if form.original.paid:
+                        readonly += ('paid',)
+                    form.readonly_fields = readonly
+                yield form
+
     model = models.Membership
-    form = MembershipForm
+    form = InlineMembershipForm
     area_to_input_field_names = ['notes']
     extra = 1
     can_delete = False
@@ -78,11 +92,25 @@ class ParticipantAdmin(TextAreaToInputMixin, admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def get_inline_formsets(self, request, formsets, inline_instances, obj=None):
+        inline_admin_formsets = []
+        for inline, formset in zip(inline_instances, formsets):
+            fieldsets = list(inline.get_fieldsets(request, obj))
+            readonly = list(inline.get_readonly_fields(request, obj))
+            prepopulated = dict(inline.get_prepopulated_fields(request, obj))
+            inline_formset = getattr(inline.__class__, inline.__class__.__name__ + 'FormSet', InlineAdminFormSet)
+            inline_admin_formset = inline_formset(
+                inline, formset, fieldsets, prepopulated, readonly,
+                model_admin=self,
+            )
+            inline_admin_formsets.append(inline_admin_formset)
+        return inline_admin_formsets
+
 
 @admin.register(models.Membership)
 class MembershipAdmin(AppendOnlyModel, admin.ModelAdmin):
     date_hierarchy = 'form_filled'
-    readonly_fields = ['tier', 'member_type', 'participant', 'effective_from', 'form_filled', 'paid', 'amount_paid',
+    readonly_fields = ['member_type', 'participant', 'effective_from', 'form_filled', 'paid', 'amount_paid',
                        'payment_method']
     change_view_submit_mode = AppendOnlyModel.JUST_SAVE_MODE
 
@@ -92,19 +120,26 @@ class MembershipAdmin(AppendOnlyModel, admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
-    def has_add_permission(self, request):
-        return False
-
 
 @admin.register(models.Tier)
 class TierAdmin(TextAreaToInputMixin, admin.ModelAdmin):
     area_to_input_field_names = ['name']
 
     def get_ordering(self, request):
-        return ['-created_at']
+        return ['name']
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = ()
+        if obj:
+            restrict_by_date = obj.usable_until and obj.usable_until < datetime.now(timezone.utc).date()
+            if restrict_by_date or (obj and any(mc.memberships.count() for mc in obj.membership_combinations.all())):
+                readonly += ('name', 'usable_from', 'can_vote', 'needs_renewal')
+            if restrict_by_date:
+                readonly += ('usable_until',)
+        return readonly + self.readonly_fields
 
 
 @admin.register(models.MemberType)
@@ -113,10 +148,29 @@ class MemberTypeAdmin(TextAreaToInputMixin, admin.ModelAdmin):
     list_display = ['type_name', 'notes']
 
     def get_ordering(self, request):
-        return ['-created_at']
+        return ['type_name']
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj and any(mc.memberships.count() for mc in obj.membership_combinations.all()):
+            return ('type_name',) + self.readonly_fields
+        return self.readonly_fields
+
+
+@admin.register(models.MemberTypeTier)
+class MemberTypeTierAdmin(TextAreaToInputMixin, admin.ModelAdmin):
+    def get_ordering(self, request):
+        return ['member_type__type_name', 'tier__name']
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.memberships.count():
+            return ('member_type', 'tier', 'base_amount') + self.readonly_fields
+        return self.readonly_fields
 
 
 @admin.register(models.GeneralSetup)
