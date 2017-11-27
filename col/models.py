@@ -18,8 +18,9 @@ class GeneralSetup(Loggable, models.Model):
     valid_from = models.DateField()
     valid_until = models.DateField(null=True, blank=True)
     days_to_vote_since_membership = models.PositiveIntegerField()
+    days_before_vote_to_close_eligible_members = models.PositiveIntegerField()
     minimum_age_to_vote = models.PositiveIntegerField()
-    vote_allowed_permanently = models.BooleanField()
+    does_vote_eligibility_need_renewal = models.BooleanField()
     renewal_month = models.PositiveIntegerField(null=True, blank=True)
     renewal_grace_months_period = models.PositiveIntegerField(null=True, blank=True)
 
@@ -101,7 +102,7 @@ class Tier(Loggable, models.Model):
     usable_from = models.DateField()
     usable_until = models.DateField(null=True, blank=True)
     can_vote = models.BooleanField()
-    expires = models.BooleanField()
+    needs_renewal = models.BooleanField()
     allowed_member_types = models.ManyToManyField(MemberType)
 
     def is_usable_for(self, ref_date):

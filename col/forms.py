@@ -11,7 +11,8 @@ class GeneralSetupForm(ModelForm):
     def clean(self):
         super(GeneralSetupForm, self).clean()
         errors = dict()
-        if 'vote_allowed_permanently' in self.cleaned_data and not self.cleaned_data['vote_allowed_permanently']:
+        if 'does_vote_eligibility_need_renewal' in self.cleaned_data \
+                and not self.cleaned_data['does_vote_eligibility_need_renewal']:
             for field_name, value in (
                     ('renewal_month', self.cleaned_data.get('renewal_month')),
                     ('renewal_grace_months_period', self.cleaned_data.get('renewal_grace_months_period')),

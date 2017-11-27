@@ -125,9 +125,9 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
     form = forms.GeneralSetupForm
     change_view_submit_mode = AppendOnlyModel.JUST_SAVE_MODE
     list_display = ['get_view', 'valid_from', 'valid_until', 'days_to_vote_since_membership',
-                    'vote_allowed_permanently', 'renewal_month', 'renewal_grace_months_period']
-    readonly_fields = ['valid_from', 'days_to_vote_since_membership', 'vote_allowed_permanently', 'renewal_month',
-                       'renewal_grace_months_period']
+                    'does_vote_eligibility_need_renewal', 'renewal_month', 'renewal_grace_months_period']
+    readonly_fields = ['valid_from', 'days_to_vote_since_membership', 'does_vote_eligibility_need_renewal',
+                       'renewal_month', 'renewal_grace_months_period']
 
     def get_ordering(self, request):
         return ['-created_at']
