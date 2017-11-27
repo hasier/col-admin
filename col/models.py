@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+from dateutil.rrule import rrule, YEARLY
 from dateutil.relativedelta import relativedelta
 from django.db import models
 from memoize import delete_memoized, memoize
@@ -137,6 +138,26 @@ class Membership(Loggable, models.Model):
     amount_paid = models.PositiveIntegerField()
     payment_method = models.PositiveIntegerField(choices=PAYMENT_METHODS.items())
     notes = models.TextField(null=True, blank=True)
+
+    def is_active(self):
+        if datetime.now(timezone.utc).date() < self.effective_from:
+            return False
+
+        setup = GeneralSetup.get_last()
+        if not setup.does_vote_eligibility_need_renewal:
+            return True
+
+        if not self.member_type.tier.needs_renewal:
+            return True
+
+        next_renewal = rrule(YEARLY, dtstart=self.effective_from, bymonth=setup.renewal_month, count=1)[0]
+        return (
+            self.effective_from.year + 1 == next_renewal.year
+            or (
+                self.effective_from.year == next_renewal.year
+                and next_renewal.month + setup.renewal_grace_months_period < self.effective_from.month
+            )
+        )
 
     def __str__(self):
         return '{} membership for {}'.format(self.effective_from, self.participant)
