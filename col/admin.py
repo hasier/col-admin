@@ -3,7 +3,6 @@ from __future__ import absolute_import, unicode_literals
 from datetime import datetime, timezone
 
 from django.contrib import admin
-from django.contrib.admin.helpers import InlineAdminFormSet
 from django.db.models.fields import TextField
 
 from col import forms, models
@@ -33,17 +32,6 @@ class EmergencyContactInline(TextAreaToInputMixin, admin.TabularInline):
 
 
 class MembershipInline(TextAreaToInputMixin, admin.TabularInline):
-    class MembershipInlineFormSet(InlineAdminFormSet):
-        def __iter__(self):
-            for form in super(MembershipInline.MembershipInlineFormSet, self).__iter__():
-                if form.original:
-                    readonly = ('member_type', 'participant', 'effective_from', 'form_filled', 'amount_paid',
-                                'payment_method')
-                    if form.original.paid:
-                        readonly += ('paid',)
-                    form.readonly_fields = readonly
-                yield form
-
     model = models.Membership
     form = InlineMembershipForm
     area_to_input_field_names = ['notes']
@@ -91,20 +79,6 @@ class ParticipantAdmin(TextAreaToInputMixin, admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
-
-    def get_inline_formsets(self, request, formsets, inline_instances, obj=None):
-        inline_admin_formsets = []
-        for inline, formset in zip(inline_instances, formsets):
-            fieldsets = list(inline.get_fieldsets(request, obj))
-            readonly = list(inline.get_readonly_fields(request, obj))
-            prepopulated = dict(inline.get_prepopulated_fields(request, obj))
-            inline_formset = getattr(inline.__class__, inline.__class__.__name__ + 'FormSet', InlineAdminFormSet)
-            inline_admin_formset = inline_formset(
-                inline, formset, fieldsets, prepopulated, readonly,
-                model_admin=self,
-            )
-            inline_admin_formsets.append(inline_admin_formset)
-        return inline_admin_formsets
 
 
 @admin.register(models.Membership)

@@ -81,11 +81,19 @@ class ParticipantForm(ModelForm):
 
 
 class InlineMembershipForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'instance' in kwargs:
+            for field_name in ('member_type', 'participant', 'effective_from', 'form_filled', 'amount_paid',
+                               'payment_method'):
+                self.fields[field_name].disabled = True
+            if kwargs['instance'].paid:
+                self.fields['paid'].disabled = True
+
     def clean(self):
         super(InlineMembershipForm, self).clean()
         errors = dict()
-        if 'member_type' in self.cleaned_data and \
-                not self.cleaned_data['member_type'].is_usable_for(self.cleaned_data['effective_from']):
+        if not self.cleaned_data['member_type'].is_usable_for(self.cleaned_data['effective_from']):
             errors['effective_from'] = 'The selected tier is not available for this period'
 
         if errors:
