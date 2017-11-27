@@ -29,6 +29,7 @@ SECRET_KEY = env('DJANGO_SECRET_KEY', default='secret')
 DEBUG = env.bool('DEBUG', default=False)
 if DEBUG:
     logger.warning('DEBUG is enabled!')
+
 # Logging settings
 # https://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/
 LOGGING_CONFIG = None

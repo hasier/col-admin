@@ -29,7 +29,7 @@ class GeneralSetup(Loggable, models.Model):
     def get_last(cls):
         try:
             return cls.objects.order_by('-created_at')[0]
-        except KeyError:
+        except IndexError:
             return None
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
