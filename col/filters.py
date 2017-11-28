@@ -1,8 +1,10 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from django.contrib.admin.filters import SimpleListFilter
-from django.template.loader import get_template
 from django.contrib.admin.templatetags.admin_list import register
+from django.template.loader import get_template
+
+from col.models import GeneralSetup
 
 
 @register.simple_tag
@@ -38,6 +40,17 @@ class EligibleForVoteParticipantFilter(SimpleListFilter):
             value = datetime.strptime(value, '%d/%m/%Y')
         else:
             value = datetime.now(timezone.utc)
-        value = value.date()
 
-        return queryset
+        date = value.date()
+        setup = GeneralSetup.get_current()
+        next_renewal = setup.get_next_renewal(date)
+        effective_from = next_renewal - timedelta(days=max(setup.days_to_vote_since_membership,
+                                                           setup.days_before_vote_to_close_eligible_members))
+        # TODO Work around how it would work if you were a member in the previous period
+        qs = queryset.filter(
+            memberships__effective_from__lt=effective_from,
+            memberships__effective_from__gt=date
+        )
+        if not setup.does_vote_eligibility_need_renewal:
+            qs = qs.filter(memberships__member_type__tier__needs_renewal=False)
+        return qs

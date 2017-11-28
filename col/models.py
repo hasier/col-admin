@@ -30,7 +30,7 @@ class GeneralSetup(Loggable, models.Model):
     @memoize(86400)
     def get_for_date(cls, date):
         try:
-            return cls.objects.filter(Q(valid_until__gt=date) | Q(valid_until=None) | Q(valid_until=''),
+            return cls.objects.filter(Q(valid_until__gt=date) | Q(valid_until=None),
                                       valid_from__lt=date)[0]
         except IndexError:
             return None
@@ -159,7 +159,14 @@ class Membership(Loggable, models.Model):
             return False
 
         setup = general_setup_ref or GeneralSetup.get_for_date(date)
-        return self.effective_from < setup.get_next_renewal(date) and not self.member_type.tier.needs_renewal
+        next_renewal = setup.get_next_renewal(date)
+        return (
+            self.effective_from < next_renewal
+            and (
+                not setup.does_vote_eligibility_need_renewal
+                or not self.member_type.tier.needs_renewal
+            )
+        )
 
     @property
     def is_active(self):
