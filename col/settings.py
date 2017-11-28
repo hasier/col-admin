@@ -79,6 +79,12 @@ LOGGING = {
     }
 }
 
+# Email backend settings
+# https://github.com/sklarsa/django-sendgrid-v5
+EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
+SENDGRID_API_KEY = env('SENDGRID_API_KEY')
+SENDGRID_SANDBOX_MODE_IN_DEBUG = True
+
 # Application definition
 INSTALLED_APPS = [
     'col',
