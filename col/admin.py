@@ -180,7 +180,7 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
         if obj:
             readonly = list(self.readonly_fields)
             if obj.valid_until:
-                last = models.GeneralSetup.get_last()
+                last = models.GeneralSetup.get_current()
                 if last and last.pk != obj.pk:
                     readonly.insert(1, 'valid_until')
             return readonly

@@ -28,7 +28,7 @@ class GeneralSetupForm(ModelForm):
         if valid_until and valid_until < valid_from:
             errors['valid_until'] = 'The end date must happen later than the beginning'
         else:
-            last = models.GeneralSetup.get_last()
+            last = models.GeneralSetup.get_current()
             if last:
                 if last.pk != self.instance.pk:
                     # If there is a previous GeneralSetup and it is not the currently edited instance...

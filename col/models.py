@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 
-from dateutil.rrule import rrule, YEARLY
 from dateutil.relativedelta import relativedelta
+from dateutil.rrule import YEARLY, rrule
 from django.db import models
+from django.db.models.query_utils import Q
 from memoize import delete_memoized, memoize
 
 from col.constants import PAYMENT_METHODS
@@ -26,15 +27,21 @@ class GeneralSetup(Loggable, models.Model):
     renewal_grace_months_period = models.PositiveIntegerField(null=True, blank=True)
 
     @classmethod
-    @memoize(3600)
-    def get_last(cls):
+    @memoize(86400)
+    def get_for_date(cls, date):
         try:
-            return cls.objects.order_by('-created_at')[0]
+            return cls.objects.filter(Q(valid_until__gt=date) | Q(valid_until=None) | Q(valid_until=''),
+                                      valid_from__lt=date)[0]
         except IndexError:
             return None
 
+    @classmethod
+    @memoize(3600)
+    def get_current(cls):
+        return cls.get_for_date(datetime.now(timezone.utc))
+
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        delete_memoized(self.get_last)
+        delete_memoized(self.get_for_date)
         return super(GeneralSetup, self).save(force_insert=force_insert, force_update=force_update, using=using,
                                               update_fields=update_fields)
 
@@ -139,25 +146,28 @@ class Membership(Loggable, models.Model):
     payment_method = models.PositiveIntegerField(choices=PAYMENT_METHODS.items())
     notes = models.TextField(null=True, blank=True)
 
-    def is_active(self):
-        if datetime.now(timezone.utc).date() < self.effective_from:
+    def is_active_on(self, date, general_setup_ref=None):
+        if date < self.effective_from:
             return False
 
-        setup = GeneralSetup.get_last()
+        setup = general_setup_ref or GeneralSetup.get_for_date(date)
         if not setup.does_vote_eligibility_need_renewal:
             return True
 
         if not self.member_type.tier.needs_renewal:
             return True
 
-        next_renewal = rrule(YEARLY, dtstart=self.effective_from, bymonth=setup.renewal_month, count=1)[0]
-        return (
-            self.effective_from.year + 1 == next_renewal.year
-            or (
-                self.effective_from.year == next_renewal.year
-                and next_renewal.month + setup.renewal_grace_months_period < self.effective_from.month
-            )
-        )
+        # Start counting when the month finishes, at 00:00 on the 1st of the following month
+        dtstart = datetime(date.year, setup.renewal_month, 1) + relativedelta(months=1)
+        next_renewal = rrule(YEARLY,
+                             dtstart=dtstart,
+                             bymonth=setup.renewal_month,
+                             count=1)[0]
+        return self.effective_from < next_renewal
+
+    @property
+    def is_active(self):
+        return self.is_active_on(datetime.now(timezone.utc), GeneralSetup.get_current())
 
     def __str__(self):
         return '{} membership for {}'.format(self.effective_from, self.participant)
