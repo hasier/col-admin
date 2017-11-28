@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.db.models.fields import TextField
 
 from col import forms, models
+from col.filters import EligibleForVoteParticipantFilter
 from col.forms import InlineMembershipForm, ParticipantForm
 from col.formsets import RequiredOnceInlineFormSet
 from col.mixins import AppendOnlyModel, TextAreaToInputMixin, ViewColumnMixin
@@ -72,6 +73,7 @@ class ParticipantAdmin(TextAreaToInputMixin, admin.ModelAdmin):
     form = ParticipantForm
     date_hierarchy = 'created_at'
     area_to_input_field_names = ['name', 'surname', 'postcode', 'phone']
+    list_filter = [EligibleForVoteParticipantFilter]
     inlines = [HealthInfoInline, EmergencyContactInline, MembershipInline]
 
     def get_ordering(self, request):
