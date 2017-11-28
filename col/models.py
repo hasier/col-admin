@@ -40,6 +40,14 @@ class GeneralSetup(Loggable, models.Model):
     def get_current(cls):
         return cls.get_for_date(datetime.now(timezone.utc))
 
+    def get_next_renewal(self, from_date):
+        if not self.does_vote_eligibility_need_renewal:
+            return datetime.max
+
+        # Start counting when the month finishes, at 00:00 on the 1st of the following month
+        dtstart = datetime(from_date.year, self.renewal_month, 1) + relativedelta(months=1)
+        return rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0]
+
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         delete_memoized(self.get_for_date)
         return super(GeneralSetup, self).save(force_insert=force_insert, force_update=force_update, using=using,
@@ -151,19 +159,7 @@ class Membership(Loggable, models.Model):
             return False
 
         setup = general_setup_ref or GeneralSetup.get_for_date(date)
-        if not setup.does_vote_eligibility_need_renewal:
-            return True
-
-        if not self.member_type.tier.needs_renewal:
-            return True
-
-        # Start counting when the month finishes, at 00:00 on the 1st of the following month
-        dtstart = datetime(date.year, setup.renewal_month, 1) + relativedelta(months=1)
-        next_renewal = rrule(YEARLY,
-                             dtstart=dtstart,
-                             bymonth=setup.renewal_month,
-                             count=1)[0]
-        return self.effective_from < next_renewal
+        return self.effective_from < setup.get_next_renewal(date) and not self.member_type.tier.needs_renewal
 
     @property
     def is_active(self):
