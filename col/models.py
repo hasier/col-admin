@@ -61,6 +61,7 @@ class GeneralSetup(Loggable, models.Model):
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         delete_memoized(self.get_for_date)
+        delete_memoized(self.get_current)
         delete_memoized(is_system_initialized)
         return super(GeneralSetup, self).save(force_insert=force_insert, force_update=force_update, using=using,
                                               update_fields=update_fields)

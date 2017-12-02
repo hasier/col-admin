@@ -156,15 +156,18 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
     form = forms.GeneralSetupForm
     change_view_submit_mode = AppendOnlyModel.JUST_SAVE_MODE
     list_display = ['get_view', 'valid_from', 'valid_until', 'days_to_vote_since_membership',
+                    'days_before_vote_to_close_eligible_members', 'minimum_age_to_vote',
                     'does_vote_eligibility_need_renewal', 'renewal_month', 'renewal_grace_months_period']
-    readonly_fields = ['valid_from', 'days_to_vote_since_membership', 'does_vote_eligibility_need_renewal',
-                       'renewal_month', 'renewal_grace_months_period']
+    readonly_fields = ['valid_from', 'days_to_vote_since_membership', 'days_before_vote_to_close_eligible_members',
+                       'minimum_age_to_vote', 'does_vote_eligibility_need_renewal', 'renewal_month',
+                       'renewal_grace_months_period']
 
     def get_ordering(self, request):
         return ['-created_at']
 
     def has_add_permission(self, request):
-        return request.user.is_superuser
+        setup = models.GeneralSetup.get_current()
+        return request.user.is_superuser and (setup is None or setup.valid_until is not None)
 
     def has_change_permission(self, request, obj=None):
         return request.user.is_superuser
@@ -173,7 +176,7 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
         return False
 
     def get_exclude(self, request, obj=None):
-        if obj:
+        if obj or not models.GeneralSetup.objects.exists():
             return []
         return ['valid_from']
 
@@ -182,7 +185,7 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
             readonly = list(self.readonly_fields)
             if obj.valid_until:
                 last = models.GeneralSetup.get_current()
-                if last and last.pk != obj.pk:
+                if last is None or last.pk != obj.pk:
                     readonly.insert(1, 'valid_until')
             return readonly
         return []

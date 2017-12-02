@@ -36,7 +36,6 @@
     </button>
     <br /><br />
     {% for app in app_list %}
-        {{ 'is_system_initialized'|get_py_value }}
         {% if app.app_label == 'col' or app.app_label == 'auth' or 'is_system_initialized'|get_py_value %}
             <div class="app-{{ app.app_label }} module">
             <table>
