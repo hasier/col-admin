@@ -32,7 +32,7 @@ class GeneralSetup(Loggable, models.Model):
     def get_for_date(cls, date):
         try:
             return cls.objects.filter(Q(valid_until__gt=date) | Q(valid_until=None),
-                                      valid_from__lt=date)[0]
+                                      valid_from__lte=date)[0]
         except IndexError:
             return None
 
