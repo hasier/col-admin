@@ -79,6 +79,7 @@ class Migration(migrations.Migration):
                 ('paid', models.DateField(null=True, blank=True)),
                 ('amount_paid', models.PositiveIntegerField()),
                 ('payment_method', models.PositiveIntegerField(choices=[(1, 'Cash'), (2, 'Bank transfer')])),
+                ('is_renewal', models.BooleanField()),
                 ('notes', models.TextField(null=True, blank=True)),
             ],
             options={

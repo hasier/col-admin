@@ -7,6 +7,7 @@ from django.db.models.query_utils import Q
 from memoize import delete_memoized, memoize
 
 from col.constants import PAYMENT_METHODS
+from col.templatetags.utils import is_system_initialized
 
 
 class Loggable(models.Model):
@@ -40,16 +41,27 @@ class GeneralSetup(Loggable, models.Model):
     def get_current(cls):
         return cls.get_for_date(datetime.now(timezone.utc))
 
+    def get_previous_renewal(self, from_date):
+        if not self.does_vote_eligibility_need_renewal:
+            return self.valid_from
+
+        dtstart = datetime(from_date.year - 1, from_date.month, 1)
+        return max(self.valid_from, rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0])
+
     def get_next_renewal(self, from_date):
         if not self.does_vote_eligibility_need_renewal:
-            return datetime.max
+            return self.valid_until or datetime.max
 
         # Start counting when the month finishes, at 00:00 on the 1st of the following month
-        dtstart = datetime(from_date.year, self.renewal_month, 1) + relativedelta(months=1)
-        return rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0]
+        dtstart = datetime(from_date.year, from_date.month, 1) + relativedelta(months=1)
+        return min(
+            self.valid_until or datetime.max,
+            rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0]
+        )
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         delete_memoized(self.get_for_date)
+        delete_memoized(is_system_initialized)
         return super(GeneralSetup, self).save(force_insert=force_insert, force_update=force_update, using=using,
                                               update_fields=update_fields)
 
@@ -152,16 +164,15 @@ class Membership(Loggable, models.Model):
     paid = models.DateField(null=True, blank=True)
     amount_paid = models.PositiveIntegerField()
     payment_method = models.PositiveIntegerField(choices=PAYMENT_METHODS.items())
+    is_renewal = models.BooleanField()
     notes = models.TextField(null=True, blank=True)
 
     def is_active_on(self, date, general_setup_ref=None):
-        if date < self.effective_from:
-            return False
-
         setup = general_setup_ref or GeneralSetup.get_for_date(date)
+        previous_renewal = setup.get_previous_renewal(date)
         next_renewal = setup.get_next_renewal(date)
         return (
-            self.effective_from < next_renewal
+            previous_renewal < self.effective_from < next_renewal
             and (
                 not setup.does_vote_eligibility_need_renewal
                 or not self.member_type.tier.needs_renewal
@@ -174,3 +185,15 @@ class Membership(Loggable, models.Model):
 
     def __str__(self):
         return '{} membership for {}'.format(self.effective_from, self.participant)
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        try:
+            last_membership = self.objects.filter(participant_id=self.participant_id).order_by('-created_at')[0]
+        except IndexError:
+            self.is_renewal = False
+        else:
+            # If it was active last month, this new Membership is a renewal
+            self.is_renewal = last_membership.is_active_on(self.effective_from - relativedelta(months=1))
+
+        super(Membership, self).save(force_insert=force_insert, force_update=force_update, using=using,
+                                     update_fields=update_fields)

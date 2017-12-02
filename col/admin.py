@@ -35,6 +35,7 @@ class EmergencyContactInline(TextAreaToInputMixin, admin.TabularInline):
 class MembershipInline(TextAreaToInputMixin, admin.TabularInline):
     model = models.Membership
     form = InlineMembershipForm
+    exclude = ['is_renewal']
     area_to_input_field_names = ['notes']
     extra = 1
     can_delete = False
