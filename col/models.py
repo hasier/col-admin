@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import YEARLY, rrule
@@ -46,17 +46,17 @@ class GeneralSetup(Loggable, models.Model):
             return self.valid_from
 
         dtstart = datetime(from_date.year - 1, from_date.month, 1)
-        return max(self.valid_from, rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0])
+        return max(self.valid_from, rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0].date())
 
     def get_next_renewal(self, from_date):
         if not self.does_vote_eligibility_need_renewal:
-            return self.valid_until or datetime.max
+            return self.valid_until or date.max
 
         # Start counting when the month finishes, at 00:00 on the 1st of the following month
         dtstart = datetime(from_date.year, from_date.month, 1) + relativedelta(months=1)
         return min(
-            self.valid_until or datetime.max,
-            rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0]
+            self.valid_until or date.max,
+            rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0].date()
         )
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):

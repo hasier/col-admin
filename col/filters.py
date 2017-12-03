@@ -27,16 +27,13 @@ class EligibleForVoteParticipantFilter(SimpleListFilter):
 
         date = value.date()
         setup = GeneralSetup.get_current()
-        effective_from = date - timedelta(days=max(setup.days_to_vote_since_membership,
-                                                   setup.days_before_vote_to_close_eligible_members))
 
         if setup.does_vote_eligibility_need_renewal:
-            previous_renewal = max(setup.get_previous_renewal(date), setup.valid_from)
             qs = queryset.filter(
                 memberships__effective_from__gte=Case(
                     When(memberships__member_type__tier__needs_renewal=False,
                          then=Value(setup.valid_from)),
-                    default=previous_renewal
+                    default=setup.get_previous_renewal(date)
                 ),
             )
         else:
@@ -45,7 +42,8 @@ class EligibleForVoteParticipantFilter(SimpleListFilter):
         qs = qs.filter(
             memberships__effective_from__lte=Case(
                 When(memberships__is_renewal=True, then=date),
-                default=effective_from
+                default=date - timedelta(days=max(setup.days_to_vote_since_membership,
+                                                  setup.days_before_vote_to_close_eligible_members))
             ),
             memberships__member_type__tier__can_vote=True,
         )
