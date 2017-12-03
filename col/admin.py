@@ -5,12 +5,13 @@ from datetime import datetime, timezone
 from django.contrib import admin
 from django.contrib.admin import helpers
 from django.db.models.fields import TextField
+from django.shortcuts import render
 
 from col import forms, models
 from col.filters import EligibleForVoteParticipantFilter
 from col.forms import InlineMembershipForm, ParticipantForm
 from col.formsets import RequiredOnceInlineFormSet
-from col.mixins import AppendOnlyModel, TextAreaToInputMixin, ViewColumnMixin
+from col.mixins import AppendOnlyModel, RemoveDeleteActionMixin, TextAreaToInputMixin, ViewColumnMixin
 
 
 class HealthInfoInline(admin.TabularInline):
@@ -69,17 +70,17 @@ class FamilyAdmin(TextAreaToInputMixin, admin.ModelAdmin):
         return []
 
 
-def export_csv(modeladmin, request, queryset):
-    # TODO Generate view to export data (maybe HTML template redirection better?)
-    print(queryset)
+def generate_participant_table(modeladmin, request, queryset):
+    queryset = queryset.order_by('surname')
+    return render(request, 'col/participant_export.html', context=dict(participants=queryset.all()))
 
 
-export_csv.short_description = "Export all to CSV"
+generate_participant_table.short_description = "Generate participant PDF"
 
 
 @admin.register(models.Participant)
-class ParticipantAdmin(TextAreaToInputMixin, admin.ModelAdmin):
-    actions = [export_csv]
+class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, admin.ModelAdmin):
+    actions = [generate_participant_table]
     form = ParticipantForm
     date_hierarchy = 'created_at'
     area_to_input_field_names = ['name', 'surname', 'postcode', 'phone']
@@ -103,8 +104,8 @@ class ParticipantAdmin(TextAreaToInputMixin, admin.ModelAdmin):
         except IndexError:
             action = None
 
-        # If the action is export_csv and no check box has been marked
-        if action == export_csv.__name__ and not request.POST.getlist(helpers.ACTION_CHECKBOX_NAME):
+        # If the action is generate_participant_table and no check box has been marked
+        if action == generate_participant_table.__name__ and not request.POST.getlist(helpers.ACTION_CHECKBOX_NAME):
             request.POST._mutable = True
             # Activate to select across pages and avoid PK filter
             request.POST['select_across'] = True

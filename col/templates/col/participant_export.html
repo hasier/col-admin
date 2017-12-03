@@ -1,0 +1,49 @@
+<html>
+    <head>
+        <title>Participant export</title>
+        <meta name="robots" content="NONE,NOARCHIVE"/>
+        <style type="text/css">
+                @media print {
+                    /* Print in two columns */
+                    table {
+                        column-count: 2;
+                        -webkit-column-count: 2;
+                        -moz-column-count: 2;
+                        -webkit-column-break-inside: avoid;
+                        page-break-inside: avoid;
+                        break-inside: avoid;
+                    }
+                    /* Delete header and footer on printing */
+                    @page {
+                        margin: 0;
+                    }
+                    body {
+                        margin: 1.6cm;
+                    }
+                }
+                table {
+                    width: 80%;
+                    align: center;
+                    margin: 1em auto;
+                }
+                table, th, td {
+                    border: 1px solid black;
+                    border-collapse: collapse;
+                    padding: 5px 10px;
+                }
+        </style>
+    </head>
+    <body>
+        <table border="1">
+            <tbody>
+                {% for participant in participants %}
+                <tr><td>{{ participant.name }}</td><td>{{ participant.surname }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <script type="text/javascript">
+                window.onload = function() { window.print(); }
+        </script>
+    </body>
+</html>
