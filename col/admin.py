@@ -3,13 +3,14 @@ from __future__ import absolute_import, unicode_literals
 from datetime import datetime, timezone
 
 from django.contrib import admin
+from django.contrib.admin import helpers
 from django.db.models.fields import TextField
 
 from col import forms, models
 from col.filters import EligibleForVoteParticipantFilter
 from col.forms import InlineMembershipForm, ParticipantForm
 from col.formsets import RequiredOnceInlineFormSet
-from col.mixins import AppendOnlyModel, RemoveDeleteActionMixin, TextAreaToInputMixin, ViewColumnMixin
+from col.mixins import AppendOnlyModel, TextAreaToInputMixin, ViewColumnMixin
 
 
 class HealthInfoInline(admin.TabularInline):
@@ -68,8 +69,17 @@ class FamilyAdmin(TextAreaToInputMixin, admin.ModelAdmin):
         return []
 
 
+def export_csv(modeladmin, request, queryset):
+    # TODO Generate view to export data (maybe HTML template redirection better?)
+    print(queryset)
+
+
+export_csv.short_description = "Export all to CSV"
+
+
 @admin.register(models.Participant)
-class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, admin.ModelAdmin):
+class ParticipantAdmin(TextAreaToInputMixin, admin.ModelAdmin):
+    actions = [export_csv]
     form = ParticipantForm
     date_hierarchy = 'created_at'
     area_to_input_field_names = ['name', 'surname', 'postcode', 'phone']
@@ -81,6 +91,28 @@ class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, admin.Mode
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    def changelist_view(self, request, extra_context=None):
+        try:
+            action_index = int(request.POST.get('index', 0))
+        except ValueError:
+            action_index = 0
+
+        try:
+            action = request.POST.getlist('action')[action_index]
+        except IndexError:
+            action = None
+
+        # If the action is export_csv and no check box has been marked
+        if action == export_csv.__name__ and not request.POST.getlist(helpers.ACTION_CHECKBOX_NAME):
+            request.POST._mutable = True
+            # Activate to select across pages and avoid PK filter
+            request.POST['select_across'] = True
+            # Add fake data to simulate marked checks
+            request.POST.setlist(helpers.ACTION_CHECKBOX_NAME, [1])
+            request.POST._mutable = False
+
+        return super(ParticipantAdmin, self).changelist_view(request, extra_context=extra_context)
 
 
 @admin.register(models.Membership)
