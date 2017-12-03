@@ -189,7 +189,9 @@ class Membership(Loggable, models.Model):
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         try:
-            last_membership = self.objects.filter(participant_id=self.participant_id).order_by('-created_at')[0]
+            last_membership = self.__class__.objects.filter(
+                participant_id=self.participant_id
+            ).order_by('-effective_from')[0]
         except IndexError:
             self.is_renewal = False
         else:

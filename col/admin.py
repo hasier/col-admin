@@ -9,7 +9,7 @@ from col import forms, models
 from col.filters import EligibleForVoteParticipantFilter
 from col.forms import InlineMembershipForm, ParticipantForm
 from col.formsets import RequiredOnceInlineFormSet
-from col.mixins import AppendOnlyModel, TextAreaToInputMixin, ViewColumnMixin
+from col.mixins import AppendOnlyModel, RemoveDeleteActionMixin, TextAreaToInputMixin, ViewColumnMixin
 
 
 class HealthInfoInline(admin.TabularInline):
@@ -69,8 +69,7 @@ class FamilyAdmin(TextAreaToInputMixin, admin.ModelAdmin):
 
 
 @admin.register(models.Participant)
-class ParticipantAdmin(TextAreaToInputMixin, admin.ModelAdmin):
-    actions = None
+class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, admin.ModelAdmin):
     form = ParticipantForm
     date_hierarchy = 'created_at'
     area_to_input_field_names = ['name', 'surname', 'postcode', 'phone']

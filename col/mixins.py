@@ -8,6 +8,7 @@ from col.utils import ExtraContextOriginalDict
 class ViewColumnMixin(object):
     def get_view(self, obj):
         return 'View'
+
     get_view.short_description = ''
     get_view.admin_order_field = None
 
@@ -77,3 +78,13 @@ class AppendOnlyModel(object):
             return self.readonly_fields + self.get_editable_fields(request, obj=obj)
         # This is an addition, no readonly to show
         return []
+
+
+class RemoveDeleteActionMixin(object):
+    def get_actions(self, request):
+        actions = super(RemoveDeleteActionMixin, self).get_actions(request)
+        try:
+            del actions['delete_selected']
+        except KeyError:
+            pass
+        return actions

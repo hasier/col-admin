@@ -20,7 +20,10 @@ class EligibleForVoteParticipantFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         value = self.value()
-        if value and value != 'today':
+        if not value:
+            return queryset
+
+        if value != 'today':
             value = datetime.strptime(value, '%d/%m/%Y')
         else:
             value = datetime.now(timezone.utc)
