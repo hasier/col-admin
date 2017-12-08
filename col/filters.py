@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from django.contrib.admin.filters import SimpleListFilter
-from django.db.models.expressions import Case, F, Value, When
+from django.db.models.expressions import Case, F, Func, Value, When
 from django.db.models.query_utils import Q
 
 from col.models import GeneralSetup
@@ -38,7 +38,8 @@ class EligibleForVoteParticipantFilter(SimpleListFilter):
             qs = queryset.filter(
                 memberships__effective_from__gte=Case(
                     When(memberships__member_type__tier__needs_renewal=False,
-                         then=Value(setup.valid_from)),
+                         then=Func(Value(setup.valid_from), F('memberships__member_type__tier__usable_from'),
+                                   function='LEAST')),
                     default=Case(
                         When(~Q(memberships__member_type__tier__usable_until=None)
                              & Q(memberships__member_type__tier__usable_until__gt=previous_renewal)

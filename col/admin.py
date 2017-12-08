@@ -114,11 +114,14 @@ class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, admin.Mode
 class MembershipAdmin(AppendOnlyModel, admin.ModelAdmin):
     date_hierarchy = 'form_filled'
     readonly_fields = ['member_type', 'participant', 'effective_from', 'form_filled', 'paid', 'amount_paid',
-                       'payment_method']
+                       'payment_method', 'is_renewal']
     change_view_submit_mode = AppendOnlyModel.JUST_SAVE_MODE
 
     def get_ordering(self, request):
         return ['created_at']
+
+    def has_add_permission(self, request):
+        return False
 
     def has_delete_permission(self, request, obj=None):
         return False
