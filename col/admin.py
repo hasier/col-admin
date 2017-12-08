@@ -1,7 +1,5 @@
 from __future__ import absolute_import, unicode_literals
 
-from datetime import datetime, timezone
-
 from django.contrib import admin
 from django.contrib.admin import helpers
 from django.db.models.fields import TextField
@@ -82,13 +80,9 @@ generate_participant_table.short_description = "Generate participant PDF"
 class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, admin.ModelAdmin):
     actions = [generate_participant_table]
     form = ParticipantForm
-    date_hierarchy = 'created_at'
     area_to_input_field_names = ['name', 'surname', 'postcode', 'phone']
     list_filter = [EligibleForVoteParticipantFilter]
     inlines = [HealthInfoInline, EmergencyContactInline, MembershipInline]
-
-    def get_ordering(self, request):
-        return ['created_at']
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -143,10 +137,9 @@ class TierAdmin(TextAreaToInputMixin, admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly = ()
         if obj:
-            restrict_by_date = obj.usable_until and obj.usable_until < datetime.now(timezone.utc).date()
-            if restrict_by_date or (obj and any(mc.memberships.count() for mc in obj.membership_combinations.all())):
-                readonly += ('name', 'usable_from', 'can_vote', 'needs_renewal')
-            if restrict_by_date:
+            if any(mc.memberships.count() for mc in obj.membership_combinations.all()):
+                readonly += ('name', 'can_vote', 'needs_renewal', 'usable_from')
+            if obj.usable_until:
                 readonly += ('usable_until',)
         return readonly + self.readonly_fields
 

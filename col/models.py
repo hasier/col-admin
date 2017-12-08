@@ -1,8 +1,9 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import YEARLY, rrule
 from django.db import models
+from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from memoize import delete_memoized, memoize
 
@@ -29,6 +30,14 @@ class GeneralSetup(Loggable, models.Model):
 
     @classmethod
     @memoize(86400)
+    def get_last(cls):
+        try:
+            return cls.objects.order_by(F('valid_until').desc(nulls_first=True))[0]
+        except IndexError:
+            return None
+
+    @classmethod
+    @memoize(86400)
     def get_for_date(cls, date):
         try:
             return cls.objects.filter(Q(valid_until__gt=date) | Q(valid_until=None),
@@ -45,23 +54,23 @@ class GeneralSetup(Loggable, models.Model):
         if not self.does_vote_eligibility_need_renewal:
             return self.valid_from
 
-        dtstart = datetime(from_date.year - 1, from_date.month, 1)
+        dtstart = datetime(from_date.year - 1, from_date.month, 1) + relativedelta(months=1)
         return max(self.valid_from, rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0].date())
 
     def get_next_renewal(self, from_date):
         if not self.does_vote_eligibility_need_renewal:
             return self.valid_until or date.max
 
-        # Start counting when the month finishes, at 00:00 on the 1st of the following month
-        dtstart = datetime(from_date.year, from_date.month, 1) + relativedelta(months=1)
+        dtstart = datetime(from_date.year, from_date.month, 1)
         return min(
             self.valid_until or date.max,
             rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0].date()
         )
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        delete_memoized(self.get_for_date)
-        delete_memoized(self.get_current)
+        delete_memoized(self.__class__.get_last)
+        delete_memoized(self.__class__.get_for_date)
+        delete_memoized(self.__class__.get_current)
         delete_memoized(is_system_initialized)
         return super(GeneralSetup, self).save(force_insert=force_insert, force_update=force_update, using=using,
                                               update_fields=update_fields)
@@ -136,7 +145,7 @@ class Tier(Loggable, models.Model):
         return self.usable_from <= ref_date and (self.usable_until is None or self.usable_until >= ref_date)
 
     def __str__(self):
-        return self.name
+        return '{} ({} - {})'.format(self.name, self.usable_from, self.usable_until or '')
 
 
 class MemberTypeTier(Loggable, models.Model):
@@ -168,17 +177,23 @@ class Membership(Loggable, models.Model):
     is_renewal = models.BooleanField()
     notes = models.TextField(null=True, blank=True)
 
-    def is_active_on(self, date, general_setup_ref=None):
-        setup = general_setup_ref or GeneralSetup.get_for_date(date)
-        previous_renewal = setup.get_previous_renewal(date)
-        next_renewal = setup.get_next_renewal(date)
-        return (
-            previous_renewal < self.effective_from < next_renewal
-            and (
-                not setup.does_vote_eligibility_need_renewal
-                or not self.member_type.tier.needs_renewal
-            )
-        )
+    def is_active_on(self, on_date, general_setup_ref=None):
+        if isinstance(on_date, datetime):
+            on_date = on_date.date()
+        tier = self.member_type.tier
+        if not tier.needs_renewal and tier.usable_from <= on_date < (tier.usable_until or date.max):
+            return True
+
+        setup = general_setup_ref or GeneralSetup.get_for_date(on_date)
+        previous_renewal = setup.get_previous_renewal(on_date)
+        if bool(tier.usable_until) and (previous_renewal < tier.usable_until < on_date):
+            # If the tier is usable over the period of the setup, it means that Tier was allowed into the new period
+            # keeping the rules of the old one, so override the setup to the previous period
+            on_date = previous_renewal - timedelta(days=1)
+            setup = GeneralSetup.get_for_date(on_date)
+            previous_renewal = setup.get_previous_renewal(on_date)
+        next_renewal = setup.get_next_renewal(on_date)
+        return previous_renewal <= self.effective_from < next_renewal
 
     @property
     def is_active(self):
