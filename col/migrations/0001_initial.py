@@ -45,8 +45,16 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('valid_from', models.DateField()),
                 ('valid_until', models.DateField(null=True, blank=True)),
-                ('days_to_vote_since_membership', models.PositiveIntegerField()),
-                ('days_before_vote_to_close_eligible_members', models.PositiveIntegerField()),
+                ('time_to_vote_since_membership', models.PositiveIntegerField()),
+                (
+                    'time_unit_to_vote_since_membership',
+                    models.PositiveIntegerField(choices=[(1, 'Days'), (2, 'Weeks'), (3, 'Months')])
+                ),
+                ('time_before_vote_to_close_eligible_members', models.PositiveIntegerField()),
+                (
+                    'time_unit_before_vote_to_close_eligible_members',
+                    models.PositiveIntegerField(choices=[(1, 'Days'), (2, 'Weeks'), (3, 'Months')])
+                ),
                 ('minimum_age_to_vote', models.PositiveIntegerField()),
                 ('does_vote_eligibility_need_renewal', models.BooleanField()),
                 ('renewal_month', models.PositiveIntegerField(null=True, blank=True)),
@@ -174,6 +182,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='membertypetier',
             name='tier',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='membership_combinations', to='col.Tier'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='membership_combinations',
+                                    to='col.Tier'),
         ),
     ]

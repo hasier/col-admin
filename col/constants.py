@@ -5,3 +5,13 @@ PAYMENT_METHODS = {
     PAYMENT_METHOD_CASH: 'Cash',
     PAYMENT_METHOD_TRANSFER: 'Bank transfer',
 }
+
+DAYS = 1
+WEEKS = 2
+MONTHS = 3
+
+TIME_UNIT_CHOICES = {
+    DAYS: 'Days',
+    WEEKS: 'Weeks',
+    MONTHS: 'Months',
+}

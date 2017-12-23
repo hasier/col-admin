@@ -1,10 +1,11 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from django.contrib.admin.filters import SimpleListFilter
 from django.db.models.expressions import Case, F, Func, Value, When
 from django.db.models.query_utils import Q
 
 from col.models import GeneralSetup
+from col.utils import get_timedelta_from_unit
 
 
 class EligibleForVoteParticipantFilter(SimpleListFilter):
@@ -52,12 +53,18 @@ class EligibleForVoteParticipantFilter(SimpleListFilter):
         else:
             qs = queryset.filter(memberships__effective_from__gte=setup.valid_from)
 
+        close_eligible_members_diff = get_timedelta_from_unit(
+            setup.time_before_vote_to_close_eligible_members, setup.time_unit_before_vote_to_close_eligible_members
+        )
+        vote_since_membership_diff = get_timedelta_from_unit(
+            setup.time_to_vote_since_membership, setup.time_unit_to_vote_since_membership
+        )
+
         qs = qs.filter(
             memberships__effective_from__lte=Case(
                 When(memberships__is_renewal=True,
-                     then=date - timedelta(setup.days_before_vote_to_close_eligible_members)),
-                default=date - timedelta(days=max(setup.days_to_vote_since_membership,
-                                                  setup.days_before_vote_to_close_eligible_members))
+                     then=date - close_eligible_members_diff),
+                default=min(date - close_eligible_members_diff, date - vote_since_membership_diff)
             ),
             memberships__member_type__tier__can_vote=True,
         ).order_by('id', '-memberships__effective_from').distinct('id')

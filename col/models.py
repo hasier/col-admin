@@ -7,7 +7,7 @@ from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from memoize import delete_memoized, memoize
 
-from col.constants import PAYMENT_METHODS
+from col.constants import PAYMENT_METHODS, TIME_UNIT_CHOICES
 from col.templatetags.utils import is_system_initialized
 
 
@@ -21,8 +21,10 @@ class Loggable(models.Model):
 class GeneralSetup(Loggable, models.Model):
     valid_from = models.DateField()
     valid_until = models.DateField(null=True, blank=True)
-    days_to_vote_since_membership = models.PositiveIntegerField()
-    days_before_vote_to_close_eligible_members = models.PositiveIntegerField()
+    time_to_vote_since_membership = models.PositiveIntegerField()
+    time_unit_to_vote_since_membership = models.PositiveIntegerField(choices=TIME_UNIT_CHOICES.items())
+    time_before_vote_to_close_eligible_members = models.PositiveIntegerField()
+    time_unit_before_vote_to_close_eligible_members = models.PositiveIntegerField(choices=TIME_UNIT_CHOICES.items())
     minimum_age_to_vote = models.PositiveIntegerField()
     does_vote_eligibility_need_renewal = models.BooleanField()
     renewal_month = models.PositiveIntegerField(null=True, blank=True)

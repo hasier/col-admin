@@ -1,14 +1,11 @@
+from datetime import timedelta
+
+from dateutil.relativedelta import relativedelta
 from django.forms.models import BaseInlineFormSet
 from django.utils.encoding import force_text
 from django.utils.six import python_2_unicode_compatible
 
-
-def limited_inline_formset_builder(max_num):
-    class LimitedInlineFormSet(BaseInlineFormSet):
-        def get_queryset(self):
-            return super(LimitedInlineFormSet, self).get_queryset()[:max_num]
-
-    return LimitedInlineFormSet
+from col.constants import DAYS, TIME_UNIT_CHOICES
 
 
 @python_2_unicode_compatible
@@ -36,3 +33,19 @@ class ExtraContextOriginalDict(dict):
 
     def __str__(self):
         return force_text(self.from_obj)
+
+
+def limited_inline_formset_builder(max_num):
+    class LimitedInlineFormSet(BaseInlineFormSet):
+        def get_queryset(self):
+            return super(LimitedInlineFormSet, self).get_queryset()[:max_num]
+
+    return LimitedInlineFormSet
+
+
+def get_timedelta_from_unit(time_diff, unit):
+    if unit == DAYS:
+        return timedelta(days=time_diff)
+
+    time_unit = TIME_UNIT_CHOICES[unit]
+    return relativedelta(**{time_unit.lower(): time_diff})

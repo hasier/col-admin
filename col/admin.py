@@ -183,10 +183,10 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
     actions = None
     form = forms.GeneralSetupForm
     change_view_submit_mode = AppendOnlyModel.JUST_SAVE_MODE
-    list_display = ['get_view', 'valid_from', 'valid_until', 'days_to_vote_since_membership',
-                    'days_before_vote_to_close_eligible_members', 'minimum_age_to_vote',
+    list_display = ['get_view', 'valid_from', 'valid_until', 'time_to_vote_since_membership',
+                    'time_before_vote_to_close_eligible_members', 'minimum_age_to_vote',
                     'does_vote_eligibility_need_renewal', 'renewal_month', 'renewal_grace_months_period']
-    readonly_fields = ['valid_from', 'days_to_vote_since_membership', 'days_before_vote_to_close_eligible_members',
+    readonly_fields = ['valid_from', 'time_to_vote_since_membership', 'time_before_vote_to_close_eligible_members',
                        'minimum_age_to_vote', 'does_vote_eligibility_need_renewal', 'renewal_month',
                        'renewal_grace_months_period']
 
