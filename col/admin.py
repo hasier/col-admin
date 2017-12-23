@@ -6,6 +6,7 @@ from django.db.models.fields import TextField
 from django.shortcuts import render
 
 from col import forms, models
+from col.constants import TIME_UNIT_CHOICES
 from col.filters import EligibleForVoteParticipantFilter
 from col.forms import InlineMembershipForm, ParticipantForm
 from col.formsets import RequiredOnceInlineFormSet
@@ -183,12 +184,38 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
     actions = None
     form = forms.GeneralSetupForm
     change_view_submit_mode = AppendOnlyModel.JUST_SAVE_MODE
-    list_display = ['get_view', 'valid_from', 'valid_until', 'time_to_vote_since_membership',
-                    'time_before_vote_to_close_eligible_members', 'minimum_age_to_vote',
+    fieldsets = (
+        (None, {
+            'fields': ('valid_from', 'minimum_age_to_vote', 'does_vote_eligibility_need_renewal', 'renewal_month',
+                       'renewal_grace_months_period')
+        }),
+        ('Time to vote since membershp', {
+            'fields': ('time_to_vote_since_membership', 'time_unit_to_vote_since_membership')
+        }),
+        ('Time before vote to close eligible members', {
+            'fields': ('time_before_vote_to_close_eligible_members', 'time_unit_before_vote_to_close_eligible_members')
+        })
+    )
+    list_display = ['get_view', 'valid_from', 'valid_until', 'get_time_to_vote_since_membership',
+                    'get_time_before_vote_to_close_eligible_members', 'minimum_age_to_vote',
                     'does_vote_eligibility_need_renewal', 'renewal_month', 'renewal_grace_months_period']
-    readonly_fields = ['valid_from', 'time_to_vote_since_membership', 'time_before_vote_to_close_eligible_members',
+    readonly_fields = ['valid_from', 'time_to_vote_since_membership', 'time_unit_to_vote_since_membership',
+                       'time_before_vote_to_close_eligible_members', 'time_unit_before_vote_to_close_eligible_members',
                        'minimum_age_to_vote', 'does_vote_eligibility_need_renewal', 'renewal_month',
                        'renewal_grace_months_period']
+
+    def get_time_to_vote_since_membership(self, obj):
+        return '{} {}'.format(
+            obj.time_to_vote_since_membership, TIME_UNIT_CHOICES[obj.time_unit_to_vote_since_membership].lower()
+        )
+
+    get_time_to_vote_since_membership.short_description = 'Time to vote since membership'
+
+    def get_time_before_vote_to_close_eligible_members(self, obj):
+        return '{} {}'.format(obj.time_before_vote_to_close_eligible_members,
+                              TIME_UNIT_CHOICES[obj.time_unit_before_vote_to_close_eligible_members].lower())
+
+    get_time_before_vote_to_close_eligible_members.short_description = 'Time before vote to close eligible members'
 
     def get_ordering(self, request):
         return ['-created_at']
