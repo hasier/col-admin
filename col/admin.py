@@ -1,5 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
+from copy import deepcopy
+
 from django.contrib import admin
 from django.contrib.admin import helpers
 from django.db.models.fields import TextField
@@ -186,8 +188,8 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
     change_view_submit_mode = AppendOnlyModel.JUST_SAVE_MODE
     fieldsets = (
         (None, {
-            'fields': ('valid_from', 'minimum_age_to_vote', 'does_vote_eligibility_need_renewal', 'renewal_month',
-                       'renewal_grace_months_period')
+            'fields': ['valid_until', 'minimum_age_to_vote', 'does_vote_eligibility_need_renewal',
+                       'renewal_month', 'renewal_grace_months_period']
         }),
         ('Time to vote since membershp', {
             'fields': ('time_to_vote_since_membership', 'time_unit_to_vote_since_membership')
@@ -234,6 +236,13 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
         if obj or not models.GeneralSetup.objects.exists():
             return []
         return ['valid_from']
+
+    def get_fieldsets(self, request, obj=None):
+        if obj or not models.GeneralSetup.objects.exists():
+            fieldsets = deepcopy(self.fieldsets)
+            fieldsets[0][1]['fields'].insert(0, 'valid_from')
+            return fieldsets
+        return self.fieldsets
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
