@@ -9,9 +9,8 @@ from django.shortcuts import render
 
 from col import forms, models
 from col.constants import TIME_UNIT_CHOICES
-from col.filters import EligibleForVoteParticipantFilter
+from col.filters import EligibleForVoteParticipantFilter, RequiresAttentionFilter
 from col.forms import InlineMembershipForm, ParticipantForm
-from col.formsets import RequiredOnceInlineFormSet
 from col.mixins import AppendOnlyModel, RemoveDeleteActionMixin, TextAreaToInputMixin, ViewColumnMixin
 
 
@@ -23,7 +22,6 @@ class HealthInfoInline(admin.TabularInline):
 
 class EmergencyContactInline(TextAreaToInputMixin, admin.TabularInline):
     model = models.EmergencyContact
-    formset = RequiredOnceInlineFormSet
     area_to_input_field_names = ['full_name', 'phone', 'relation']
     extra = 1
     can_delete = False
@@ -84,7 +82,7 @@ class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, admin.Mode
     actions = [generate_participant_table]
     form = ParticipantForm
     area_to_input_field_names = ['name', 'surname', 'postcode', 'phone']
-    list_filter = [EligibleForVoteParticipantFilter]
+    list_filter = [EligibleForVoteParticipantFilter, RequiresAttentionFilter]
     inlines = [HealthInfoInline, EmergencyContactInline, MembershipInline]
 
     def has_delete_permission(self, request, obj=None):

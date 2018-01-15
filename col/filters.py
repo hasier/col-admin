@@ -69,3 +69,37 @@ class EligibleForVoteParticipantFilter(SimpleListFilter):
             memberships__member_type__tier__can_vote=True,
         ).order_by('id', '-memberships__effective_from').distinct('id')
         return qs
+
+
+class RequiresAttentionFilter(SimpleListFilter):
+    title = 'Requires attention and updates'
+    parameter_name = 'requires_attention'
+
+    def __init__(self, *args, **kwargs):
+        super(RequiresAttentionFilter, self).__init__(*args, **kwargs)
+
+    def lookups(self, request, model_admin):
+        return (
+            ('1', 'Check participants'),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if not value:
+            return queryset
+
+        if value != '1':
+            return queryset
+
+        return queryset.filter(
+            Q(address=None) |
+            Q(address='') |
+            Q(postcode=None) |
+            Q(postcode='') |
+            Q(phone=None) |
+            Q(phone='') |
+            Q(email=None) |
+            Q(email='') |
+            Q(emergency_contacts=None) |
+            Q(memberships__paid=None)
+        )
