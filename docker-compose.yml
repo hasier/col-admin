@@ -1,7 +1,6 @@
 version: '2'
 
 services:
-
   postgres:
     image: postgres:9.6
     container_name: col-postgres
@@ -9,3 +8,9 @@ services:
       - "5432:5432"
     environment:
       - POSTGRES_USER=${USER}
+
+  redis:
+    image: redis:4
+    container_name: col-redis
+    ports:
+      - "6379:6379"
