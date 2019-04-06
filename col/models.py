@@ -8,6 +8,7 @@ from memoize import delete_memoized, memoize
 
 from col.constants import PAYMENT_METHODS, TIME_UNIT_CHOICES
 from col.templatetags.utils import is_system_initialized
+from col.utils import get_timedelta_from_unit
 
 
 class Loggable(models.Model):
@@ -195,8 +196,13 @@ class Membership(Loggable, models.Model):
         except IndexError:
             self.is_renewal = False
         else:
-            # If it was active last month, this new Membership is a renewal
-            self.is_renewal = last_membership.is_active_on(self.effective_from - relativedelta(months=1))
+            # A new membership can only vote after time_to_vote_since_membership
+            setup = GeneralSetup.get_for_date(self.effective_from)
+            delta = get_timedelta_from_unit(
+                setup.time_to_vote_since_membership, setup.time_unit_to_vote_since_membership
+            )
+            # If the renewing member has stopped being member for longer than that, it is not a renewal
+            self.is_renewal = last_membership.is_active_on(self.effective_from - delta)
 
         if self.effective_from and not self.effective_until:
             self.effective_until = GeneralSetup.get_for_date(self.effective_from).get_next_renewal(self.effective_from)
