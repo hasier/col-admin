@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from django.contrib.admin.filters import SimpleListFilter
-from django.db.models import Case, When, DateField, DurationField
+from django.db.models import Case, When, DateField, DurationField, Q
 from django.db.models.expressions import F, Value
 from django.db.models.functions import Coalesce
 
@@ -42,7 +42,8 @@ class EligibleForVoteParticipantFilter(SimpleListFilter):
             queryset
             .annotate(
                 reference_date=Value(date, output_field=DateField()),
-                vote_interval=Value(f'{setup.minimum_age_to_vote} YEARS', output_field=DurationField()),
+                min_age=Value(f'{setup.minimum_age_to_vote} YEARS', output_field=DurationField()),
+                vote_interval=Value(f'{vote_since_membership_diff.days} DAYS', output_field=DurationField()),
             )
             .filter(
                 reference_date__between=(
@@ -51,12 +52,12 @@ class EligibleForVoteParticipantFilter(SimpleListFilter):
                             memberships__is_renewal=True,
                             then=F('memberships__effective_from'),
                         ),
-                        default=F('memberships__effective_from') + vote_since_membership_diff,
+                        default=F('memberships__effective_from') + F('vote_interval'),
                         output_field=DateField(),
                     ),
                     Coalesce('memberships__effective_until', Value(date.max)),
                 ),
-                reference_date__lte=F('vote_interval') + F('date_of_birth'),
+                reference_date__lte=F('min_age') + F('date_of_birth'),
                 memberships__member_type__tier__can_vote=True,
             )
         ).order_by('id', '-memberships__effective_from').distinct('id')
@@ -83,15 +84,15 @@ class RequiresAttentionFilter(SimpleListFilter):
             return queryset
 
         return queryset.filter(
-            Q(address=None) |
-            Q(address='') |
-            Q(postcode=None) |
-            Q(postcode='') |
-            Q(phone=None) |
-            Q(phone='') |
-            Q(email=None) |
-            Q(email='') |
             Q(contact_info=None) |
+            Q(contact_info__address=None) |
+            Q(contact_info__address='') |
+            Q(contact_info__postcode=None) |
+            Q(contact_info__postcode='') |
+            Q(contact_info__phone=None) |
+            Q(contact_info__phone='') |
+            Q(contact_info__email=None) |
+            Q(contact_info__email='') |
             Q(emergency_contacts=None) |
             Q(memberships__paid=None)
         )
