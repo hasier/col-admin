@@ -14,6 +14,8 @@ import os
 
 import dj_database_url
 import environ
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 logger = logging.getLogger(__name__)
 env = environ.Env()
@@ -48,7 +50,7 @@ LOGGING = {
         'django.server': {
             '()': 'django.utils.log.ServerFormatter',
             'format': '[%(server_time)s] %(message)s',
-        }
+        },
     },
     'handlers': {
         'console': {
@@ -64,7 +66,7 @@ LOGGING = {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
-        }
+        },
     },
     'loggers': {
         'django': {
@@ -78,6 +80,12 @@ LOGGING = {
         },
     }
 }
+
+# Sentry
+sentry_sdk.init(
+    dsn=env('SENTRY_DSN', default=None),
+    integrations=[DjangoIntegration()]
+)
 
 # Email backend settings
 # https://github.com/sklarsa/django-sendgrid-v5
@@ -141,6 +149,16 @@ DATABASES = {
 }
 if not DATABASES['default']:
     raise RuntimeError('Cannot start without a valid DB connection: {}'.format(DATABASES['default']))
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": env('REDISCLOUD_URL'),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {

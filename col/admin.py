@@ -1,7 +1,3 @@
-from __future__ import absolute_import, unicode_literals
-
-from copy import deepcopy
-
 from django.contrib import admin
 from django.contrib.admin import helpers
 from django.db.models.fields import TextField
@@ -11,6 +7,7 @@ from col import forms, models
 from col.constants import TIME_UNIT_CHOICES
 from col.filters import EligibleForVoteParticipantFilter, RequiresAttentionFilter
 from col.forms import InlineMembershipForm, ParticipantForm
+from col.formsets import ContactInfoInlineFormset, RequiredOnceInlineFormSet
 from col.mixins import AppendOnlyModel, RemoveDeleteActionMixin, TextAreaToInputMixin, ViewColumnMixin
 
 
@@ -22,6 +19,7 @@ class HealthInfoInline(admin.TabularInline):
 
 class EmergencyContactInline(TextAreaToInputMixin, admin.TabularInline):
     model = models.EmergencyContact
+    formset = RequiredOnceInlineFormSet
     area_to_input_field_names = ['full_name', 'phone', 'relation']
     extra = 1
     can_delete = False
@@ -33,10 +31,24 @@ class EmergencyContactInline(TextAreaToInputMixin, admin.TabularInline):
         return formfield
 
 
+class ContactInfoInline(TextAreaToInputMixin, admin.TabularInline):
+    model = models.ContactInfo
+    formset = ContactInfoInlineFormset
+    area_to_input_field_names = ['postcode', 'phone']
+    extra = 1
+    can_delete = False
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super(ContactInfoInline, self).formfield_for_dbfield(db_field, request, **kwargs)
+        if isinstance(db_field, TextField):
+            formfield.widget.attrs.update(style='width: 90%;')
+        return formfield
+
+
 class MembershipInline(TextAreaToInputMixin, admin.TabularInline):
     model = models.Membership
     form = InlineMembershipForm
-    exclude = ['is_renewal']
+    exclude = ['is_renewal', 'effective_until']
     area_to_input_field_names = ['notes']
     extra = 1
     can_delete = False
@@ -81,9 +93,9 @@ generate_participant_table.short_description = "Generate participant PDF"
 class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, admin.ModelAdmin):
     actions = [generate_participant_table]
     form = ParticipantForm
-    area_to_input_field_names = ['name', 'surname', 'postcode', 'phone']
+    area_to_input_field_names = ['name', 'surname']
     list_filter = [EligibleForVoteParticipantFilter, RequiresAttentionFilter]
-    inlines = [HealthInfoInline, EmergencyContactInline, MembershipInline]
+    inlines = [ContactInfoInline, HealthInfoInline, EmergencyContactInline, MembershipInline]
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -114,8 +126,17 @@ class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, admin.Mode
 @admin.register(models.Membership)
 class MembershipAdmin(AppendOnlyModel, admin.ModelAdmin):
     date_hierarchy = 'form_filled'
-    readonly_fields = ['member_type', 'participant', 'effective_from', 'form_filled', 'paid', 'amount_paid',
-                       'payment_method', 'is_renewal']
+    readonly_fields = [
+        'member_type',
+        'participant',
+        'effective_from',
+        'effective_until',
+        'form_filled',
+        'paid',
+        'amount_paid',
+        'payment_method',
+        'is_renewal',
+    ]
     change_view_submit_mode = AppendOnlyModel.JUST_SAVE_MODE
 
     def get_ordering(self, request):
@@ -186,23 +207,32 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
     change_view_submit_mode = AppendOnlyModel.JUST_SAVE_MODE
     fieldsets = (
         (None, {
-            'fields': ['valid_until', 'minimum_age_to_vote', 'does_vote_eligibility_need_renewal',
-                       'renewal_month', 'renewal_grace_months_period']
+            'fields': [
+                'valid_until',
+                'minimum_age_to_vote',
+                'does_vote_eligibility_need_renewal',
+                'renewal_month',
+                'renewal_grace_months_period',
+            ]
         }),
         ('Time to vote since membershp', {
             'fields': ('time_to_vote_since_membership', 'time_unit_to_vote_since_membership')
         }),
-        ('Time before vote to close eligible members', {
-            'fields': ('time_before_vote_to_close_eligible_members', 'time_unit_before_vote_to_close_eligible_members')
-        })
     )
-    list_display = ['get_view', 'valid_from', 'valid_until', 'get_time_to_vote_since_membership',
-                    'get_time_before_vote_to_close_eligible_members', 'minimum_age_to_vote',
-                    'does_vote_eligibility_need_renewal', 'renewal_month', 'renewal_grace_months_period']
-    readonly_fields = ['valid_from', 'time_to_vote_since_membership', 'time_unit_to_vote_since_membership',
-                       'time_before_vote_to_close_eligible_members', 'time_unit_before_vote_to_close_eligible_members',
-                       'minimum_age_to_vote', 'does_vote_eligibility_need_renewal', 'renewal_month',
-                       'renewal_grace_months_period']
+    list_display = [
+        'get_view',
+        'valid_from',
+        'get_time_to_vote_since_membership',
+        'minimum_age_to_vote',
+        'renewal_month',
+    ]
+    readonly_fields = [
+        'valid_from',
+        'time_to_vote_since_membership',
+        'time_unit_to_vote_since_membership',
+        'minimum_age_to_vote',
+        'renewal_month',
+    ]
 
     def get_time_to_vote_since_membership(self, obj):
         return '{} {}'.format(
@@ -210,12 +240,6 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
         )
 
     get_time_to_vote_since_membership.short_description = 'Time to vote since membership'
-
-    def get_time_before_vote_to_close_eligible_members(self, obj):
-        return '{} {}'.format(obj.time_before_vote_to_close_eligible_members,
-                              TIME_UNIT_CHOICES[obj.time_unit_before_vote_to_close_eligible_members].lower())
-
-    get_time_before_vote_to_close_eligible_members.short_description = 'Time before vote to close eligible members'
 
     def get_ordering(self, request):
         return ['-created_at']
@@ -229,25 +253,3 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
-
-    def get_exclude(self, request, obj=None):
-        if obj or not models.GeneralSetup.objects.exists():
-            return []
-        return ['valid_from']
-
-    def get_fieldsets(self, request, obj=None):
-        if obj or not models.GeneralSetup.objects.exists():
-            fieldsets = deepcopy(self.fieldsets)
-            fieldsets[0][1]['fields'].insert(0, 'valid_from')
-            return fieldsets
-        return self.fieldsets
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            readonly = list(self.readonly_fields)
-            if obj.valid_until:
-                last = models.GeneralSetup.get_current()
-                if last is None or last.pk != obj.pk:
-                    readonly.insert(1, 'valid_until')
-            return readonly
-        return []
