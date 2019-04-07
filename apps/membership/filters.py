@@ -1,12 +1,11 @@
 from datetime import datetime, timezone
 
 from django.contrib.admin.filters import SimpleListFilter
-from django.db.models import Case, When, DateField, Q
-from django.db.models.expressions import F, Value, DurationValue
+from django.db.models import Case, DateField, Q, When
+from django.db.models.expressions import DurationValue, F, Value
 from django.db.models.functions import Coalesce
 
 from apps.membership.models import GeneralSetup
-from apps.membership.utils import get_timedelta_from_unit
 from contrib.django.postgres.fields import DurationField
 
 
@@ -35,16 +34,15 @@ class EligibleForVoteParticipantFilter(SimpleListFilter):
         date = value.date()
         setup = GeneralSetup.get_for_date(date)
 
-        vote_since_membership_diff = get_timedelta_from_unit(
-            setup.time_to_vote_since_membership, setup.time_unit_to_vote_since_membership
-        )
-
         return (
             queryset
             .annotate(
                 reference_date=Value(date, output_field=DateField()),
                 min_age=DurationValue(f"{setup.minimum_age_to_vote} YEARS", output_field=DurationField()),
-                vote_interval=DurationValue(f'{vote_since_membership_diff.days} DAYS', output_field=DurationField()),
+                vote_interval=DurationValue(
+                    f'{setup.time_to_vote_since_membership} {setup.time_unit_to_vote_since_membership.upper()}',
+                    output_field=DurationField(),
+                ),
             )
             .filter(
                 reference_date__range=(

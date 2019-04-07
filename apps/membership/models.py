@@ -133,8 +133,10 @@ class Tier(Loggable, models.Model):
     name = models.TextField()
     usable_from = models.DateField()
     usable_until = models.DateField(null=True, blank=True)
+    member_type = models.ForeignKey(MemberType, on_delete=models.PROTECT, related_name='tiers')
     can_vote = models.BooleanField()
     needs_renewal = models.BooleanField()
+    base_amount = models.PositiveIntegerField()
 
     def is_usable_for(self, ref_date):
         return self.usable_from <= ref_date and (self.usable_until is None or self.usable_until >= ref_date)
@@ -143,26 +145,8 @@ class Tier(Loggable, models.Model):
         return '{} ({} - {})'.format(self.name, self.usable_from, self.usable_until or '')
 
 
-class MemberTypeTier(Loggable, models.Model):
-    class MemberTypeTierManager(models.Manager):
-        def get_queryset(self):
-            return super(MemberTypeTier.MemberTypeTierManager, self).get_queryset().select_related()
-
-    objects = MemberTypeTierManager()
-
-    member_type = models.ForeignKey(MemberType, on_delete=models.PROTECT, related_name='membership_combinations')
-    tier = models.ForeignKey(Tier, on_delete=models.PROTECT, related_name='membership_combinations')
-    base_amount = models.PositiveIntegerField()
-
-    def is_usable_for(self, ref_date):
-        return self.tier.is_usable_for(ref_date)
-
-    def __str__(self):
-        return '{} {} ({})'.format(self.member_type, self.tier, self.base_amount)
-
-
 class Membership(Loggable, models.Model):
-    member_type = models.ForeignKey(MemberTypeTier, on_delete=models.PROTECT, related_name='memberships')
+    tier = models.ForeignKey(Tier, on_delete=models.PROTECT, related_name='memberships')
     participant = models.ForeignKey(Participant, on_delete=models.PROTECT, related_name='memberships')
     effective_from = models.DateField()
     effective_until = models.DateField(null=True, blank=True)

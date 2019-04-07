@@ -127,7 +127,7 @@ class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, admin.Mode
 class MembershipAdmin(AppendOnlyModel, admin.ModelAdmin):
     date_hierarchy = 'form_filled'
     readonly_fields = [
-        'member_type',
+        'tier',
         'participant',
         'effective_from',
         'effective_until',
@@ -163,7 +163,7 @@ class TierAdmin(TextAreaToInputMixin, admin.ModelAdmin):
         readonly = ()
         if obj:
             if any(mc.memberships.count() for mc in obj.membership_combinations.all()):
-                readonly += ('name', 'can_vote', 'needs_renewal', 'usable_from')
+                readonly += ('name', 'can_vote', 'needs_renewal', 'usable_from', 'base_amount', 'member_type')
             if obj.usable_until:
                 readonly += ('usable_until',)
         return readonly + self.readonly_fields
@@ -183,20 +183,6 @@ class MemberTypeAdmin(TextAreaToInputMixin, admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         if obj and any(mc.memberships.count() for mc in obj.membership_combinations.all()):
             return ('type_name',) + self.readonly_fields
-        return self.readonly_fields
-
-
-@admin.register(models.MemberTypeTier)
-class MemberTypeTierAdmin(TextAreaToInputMixin, admin.ModelAdmin):
-    def get_ordering(self, request):
-        return ['member_type__type_name', 'tier__name']
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj and obj.memberships.count():
-            return ('member_type', 'tier', 'base_amount') + self.readonly_fields
         return self.readonly_fields
 
 

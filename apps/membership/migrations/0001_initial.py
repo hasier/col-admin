@@ -60,6 +60,9 @@ class Migration(migrations.Migration):
                 ('usable_until', models.DateField(blank=True, null=True)),
                 ('can_vote', models.BooleanField()),
                 ('needs_renewal', models.BooleanField()),
+                ('base_amount', models.PositiveIntegerField()),
+                ('member_type', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='tiers',
+                                                  to='membership.MemberType')),
             ],
             options={
                 'abstract': False,
@@ -82,23 +85,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='MemberTypeTier',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('base_amount', models.PositiveIntegerField()),
-                ('member_type',
-                 models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='membership_combinations',
-                                   to='membership.MemberType')),
-                ('tier',
-                 models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='membership_combinations',
-                                   to='membership.Tier')),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
-        migrations.CreateModel(
             name='Membership',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -112,12 +98,11 @@ class Migration(migrations.Migration):
                  models.PositiveIntegerField(choices=sorted(PAYMENT_METHODS.items()))),
                 ('is_renewal', models.BooleanField()),
                 ('notes', models.TextField(blank=True, null=True)),
-                ('member_type',
-                 models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='memberships',
-                                   to='membership.MemberTypeTier')),
                 ('participant',
                  models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='memberships',
                                    to='membership.Participant')),
+                ('tier', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='memberships',
+                                           to='membership.Tier')),
             ],
             options={
                 'abstract': False,
