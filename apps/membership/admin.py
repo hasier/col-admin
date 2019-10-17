@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.contrib.admin import helpers
 from django.db.models.fields import TextField
 from django.shortcuts import render
+from material.admin.options import MaterialModelAdmin
+from material.admin.decorators import register
 
 from apps.membership import forms, models
 from apps.membership.constants import TIME_UNIT_CHOICES
@@ -54,8 +56,10 @@ class MembershipInline(TextAreaToInputMixin, admin.TabularInline):
     can_delete = False
 
 
-@admin.register(models.Family)
-class FamilyAdmin(TextAreaToInputMixin, admin.ModelAdmin):
+@register(models.Family)
+class FamilyAdmin(TextAreaToInputMixin, MaterialModelAdmin):
+    icon_name = 'child_friendly'
+
     actions = None
     area_to_input_field_names = ['family_name']
     list_display = ['family_name', 'get_family_members']
@@ -89,8 +93,10 @@ def generate_participant_table(modeladmin, request, queryset):
 generate_participant_table.short_description = "Generate participant PDF"
 
 
-@admin.register(models.Participant)
-class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, admin.ModelAdmin):
+@register(models.Participant)
+class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, MaterialModelAdmin):
+    icon_name = 'person_outline'
+
     actions = [generate_participant_table]
     form = ParticipantForm
     area_to_input_field_names = ['name', 'surname']
@@ -123,8 +129,10 @@ class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, admin.Mode
         return super(ParticipantAdmin, self).changelist_view(request, extra_context=extra_context)
 
 
-@admin.register(models.Membership)
-class MembershipAdmin(AppendOnlyModel, admin.ModelAdmin):
+@register(models.Membership)
+class MembershipAdmin(AppendOnlyModel, MaterialModelAdmin):
+    icon_name = 'card_membership'
+
     date_hierarchy = 'form_filled'
     readonly_fields = [
         'tier',
@@ -149,8 +157,10 @@ class MembershipAdmin(AppendOnlyModel, admin.ModelAdmin):
         return False
 
 
-@admin.register(models.Tier)
-class TierAdmin(TextAreaToInputMixin, admin.ModelAdmin):
+@register(models.Tier)
+class TierAdmin(TextAreaToInputMixin, MaterialModelAdmin):
+    icon_name = 'layers'
+
     area_to_input_field_names = ['name']
 
     def get_ordering(self, request):
@@ -169,8 +179,10 @@ class TierAdmin(TextAreaToInputMixin, admin.ModelAdmin):
         return readonly + self.readonly_fields
 
 
-@admin.register(models.MemberType)
-class MemberTypeAdmin(TextAreaToInputMixin, admin.ModelAdmin):
+@register(models.MemberType)
+class MemberTypeAdmin(TextAreaToInputMixin, MaterialModelAdmin):
+    icon_name = 'people_outline'
+
     area_to_input_field_names = ['type_name']
     list_display = ['type_name', 'notes']
 
@@ -186,8 +198,10 @@ class MemberTypeAdmin(TextAreaToInputMixin, admin.ModelAdmin):
         return self.readonly_fields
 
 
-@admin.register(models.GeneralSetup)
-class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, admin.ModelAdmin):
+@register(models.GeneralSetup)
+class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, MaterialModelAdmin):
+    icon_name = 'settings'
+
     actions = None
     form = forms.GeneralSetupForm
     change_view_submit_mode = AppendOnlyModel.JUST_SAVE_MODE

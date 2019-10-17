@@ -1,13 +1,42 @@
-{% extends "admin/base.html" %}
-{% load static %}
-
-{% block title %}{{ title }} | {{ _('Castellers of London admin') }}{% endblock %}
+{% extends "admin/base_site.html" %}
+{% load static i18n material %}
 
 {% block branding %}
-<h1 id="site-name" style="min-height: 100px;"><a href="{% url 'admin:index' %}">
-    <img src="{% static "CoL_Logo.png" %}" style="max-width: 100px;" alt="CoL Logo"/>&nbsp;
-    {{ 'Castellers of London' }}</a>
-</h1>
+    <nav class="nav-extended">
+        <div class="nav-wrapper">
+            <h1 id="site-name">
+                <a href="{% url 'admin:index' %}">
+                    <img src="{% static '/CoL_Logo.png' %}" style="max-height: 200px;" />
+                    <strong>
+                        {{ site_header }}
+                    </strong>
+                </a>
+            </h1>
+        </div>
+    </nav>
 {% endblock %}
 
-{% block nav-global %}{% endblock %}
+{% block userlinks %}
+    {% block welcome-msg %}{% endblock %}
+    {% comment "CUSTOM - Disabled as there is no main site" %}
+    {% if site_url %}
+        <a href="{{ site_url }}">{% trans 'View site' %}</a>
+    {% endif %}
+    {% endcomment %}
+    <a href="{% url 'admin:themes' %}">{% trans 'Themes' %}</a>
+    {% if user.is_active and user.is_staff %}
+        {% url 'django-admindocs-docroot' as docsroot %}
+        {% if docsroot %}
+            <a href="{{ docsroot }}">{% trans 'Documentation' %}</a>
+        {% endif %}
+    {% endif %}
+    {% if user.has_usable_password %}
+        <a href="{% url 'admin:password_change' %}">
+            {% trans 'Change password' %}
+        </a>
+    {% endif %}
+    <a href="{% url 'admin:logout' %}">
+        {% trans 'Log out' %}
+        <i class="material-icons">exit_to_app</i>
+    </a>
+{% endblock %}

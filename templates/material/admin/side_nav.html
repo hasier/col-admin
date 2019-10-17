@@ -1,0 +1,96 @@
+{% load i18n material static admin_urls utils %}
+
+{% block extrastyle %}
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/widgets.css" %}" />{# CUSTOM css #}
+{% endblock %}
+
+{% block extrahead %}  {# CUSTOM block #}
+<script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+<script type="text/javascript" src="{% static "admin/js/core.js" %}"></script>
+<script type="text/javascript" src="{% static "admin/js/core.js" %}"></script>
+<script type="text/javascript" src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
+<script type="text/javascript" src="{% static "admin/js/jquery.init.js" %}"></script>
+<script type="text/javascript" src="{% static "admin/js/calendar.js" %}"></script>
+<script type="text/javascript" src="{% static "admin/js/admin/DateTimeShortcuts.js" %}"></script>
+{% endblock %}
+
+{% is_system_initialized as is_system_initialized %}  {# CUSTOM var #}
+
+<div class="scroll-pane">
+    {% if not mobile %}
+        <i class="material-icons minimize nav-bar" title="{% trans 'Minimize' %}">close</i>
+    {% endif %}
+    {% if available_apps %}
+        <ul class="collapsible">
+            <li>
+                <div class="card">
+                    <div class="card-image">
+                        {% if 'profile/user_picture.html'|template_exists %}
+                          {% include 'profile/user_picture.html' %}
+                        {% else %}
+                          {% include 'material/admin/user_picture.html' %}
+                        {% endif %}
+                    </div>
+                </div>
+            </li>
+            {% for app in available_apps %}
+                {% if app.app_label == 'membership' or app.app_label == 'auth' or is_system_initialized %}  {# CUSTOM if #}
+                    <li class="scrollspy">
+                        <div class="collapsible-header">
+                            <i class="material-icons">{% if app.icon %}{{ app.icon }}{% else %}settings{% endif %}</i>
+                            {{ app.name }}
+                        </div>
+                        <div class="collapsible-body">
+                            {% for model in app.models %}
+                                {% if app.app_label == 'membership' and model.object_name|lower == 'generalsetup' or app.app_label == 'auth' or is_system_initialized %}  {# CUSTOM if #}
+                                    {% if model.admin_url %}
+                                        <div {% if model.admin_url in request.path %}class="active"{% endif %}>
+                                            <a href="{{ model.admin_url }}">
+                                                {% if not model.proxy %}
+                                                    <span class="badge">
+                                                        {{ model.count }}
+                                                    </span>
+                                                {% endif %}
+                                                {{ model.name }}
+                                            </a>
+                                        </div>
+                                    {% else %}
+                                        <div class="disabled">{{ model.name }}
+                                            {% if not model.proxy %}
+                                                <span class="badge">{{ model.count }}</span>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% else %}
+    <div class="app">
+        <div class="card">
+            <div class="card-content">
+                <p>{% trans "You don't have permission to view or edit anything." %}</>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if is_system_initialized %}  {# CUSTOM if #}
+        <div style="margin: auto 5px">
+            <input type="text" style="padding: 8px 6px;" id="vote_eligible" name="vote_eligible" placeholder="Date" />
+            <button class="default waves-effect waves-light btn" style="margin: 10px auto;" onclick="location.href='{% url 'admin:membership_participant_changelist' %}?vote_eligible=' + document.getElementById('vote_eligible').value;">
+                Get voting members for date
+            </button>
+        </div>
+    {% endif %}
+</div>
+
+{# CUSTOM script #}
+ <script>
+  $(function() {
+    $( "#vote_eligible" ).datepicker();
+  });
+</script>

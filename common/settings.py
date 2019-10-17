@@ -15,10 +15,16 @@ import os
 import dj_database_url
 import environ
 import sentry_sdk
+from django.contrib.admin.sites import AdminSite
+from django.contrib.auth.apps import AuthConfig
 from sentry_sdk.integrations.django import DjangoIntegration
 
 logger = logging.getLogger(__name__)
 env = environ.Env()
+
+# Site defaults
+AdminSite.site_title = 'Castellers of London'
+AdminSite.site_header = 'Castellers of London'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -95,8 +101,9 @@ SENDGRID_SANDBOX_MODE_IN_DEBUG = True
 
 # Application definition
 INSTALLED_APPS = [
-    'apps.login',
-    'apps.membership',
+    'apps.login.apps.LoginConfig',
+    'apps.membership.apps.MembershipConfig',
+    'material.admin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -197,9 +204,12 @@ STATIC_URL = '/static/'
 
 # Extra places for collectstatic to find static files.
 STATICFILES_DIRS = [
-    os.path.join(PROJECT_ROOT, 'static'),
+    os.path.join(BASE_DIR, "static"),
 ]
 
 # Simplified static file serving.
 # https://warehouse.python.org/project/whitenoise/
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Material
+AuthConfig.icon_name = 'lock'
