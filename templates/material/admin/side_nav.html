@@ -77,20 +77,4 @@
         </div>
     </div>
     {% endif %}
-
-    {% if is_system_initialized %}  {# CUSTOM if #}
-        <div style="margin: auto 5px">
-            <input type="text" style="padding: 8px 6px;" id="vote_eligible" name="vote_eligible" placeholder="Date" />
-            <button class="default waves-effect waves-light btn" style="margin: 10px auto;" onclick="location.href='{% url 'admin:membership_participant_changelist' %}?vote_eligible=' + document.getElementById('vote_eligible').value;">
-                Get voting members for date
-            </button>
-        </div>
-    {% endif %}
 </div>
-
-{# CUSTOM script #}
- <script>
-  $(function() {
-    $( "#vote_eligible" ).datepicker();
-  });
-</script>
