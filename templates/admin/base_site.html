@@ -6,10 +6,8 @@
         <div class="nav-wrapper">
             <h1 id="site-name">
                 <a href="{% url 'admin:index' %}">
-                    <img src="{% static '/CoL_Logo.png' %}" style="max-height: 200px;" />
-                    <strong>
-                        {{ site_header }}
-                    </strong>
+                    <div class="brand-logo" style="min-width: 200px; background-image: url('{% static '/CoL_Logo.png' %}'); background-position: center; background-size: cover;">&nbsp;</div>
+                    {# {{ site_header }} #}
                 </a>
             </h1>
         </div>
