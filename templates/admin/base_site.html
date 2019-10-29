@@ -6,8 +6,11 @@
         <div class="nav-wrapper">
             <h1 id="site-name">
                 <a href="{% url 'admin:index' %}">
-                    <div class="brand-logo" style="min-width: 200px; background-image: url('{% static '/CoL_Logo.png' %}'); background-position: center; background-size: cover;">&nbsp;</div>
-                    {# {{ site_header }} #}
+                    {% if nav_bar_minimized %}
+                        <div class="brand-logo" style="min-width: 200px; background-image: url('{% static '/CoL_Logo.png' %}'); background-position: center; background-size: cover;">&nbsp;</div>
+                    {% else %}
+                        <strong>{{ site_header }}</strong>
+                    {% endif %}
                 </a>
             </h1>
         </div>
