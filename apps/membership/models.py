@@ -6,7 +6,7 @@ from django.db import models
 from django.utils import timezone
 from memoize import delete_memoized, memoize
 
-from apps.membership.constants import PAYMENT_METHODS, TIME_UNIT_CHOICES
+from apps.membership.constants import PaymentMethod, TimeUnit
 from apps.membership.templatetags.membership import is_membership_setup_initialized
 from apps.membership.utils import get_timedelta_from_unit
 from common.model_utils import Loggable
@@ -15,9 +15,7 @@ from common.model_utils import Loggable
 class GeneralSetup(Loggable, models.Model):
     valid_from = models.DateField(db_index=True)
     time_to_vote_since_membership = models.PositiveIntegerField()
-    time_unit_to_vote_since_membership = models.PositiveIntegerField(
-        choices=sorted(TIME_UNIT_CHOICES.items())
-    )
+    time_unit_to_vote_since_membership = models.TextField(choices=TimeUnit.choices())
     minimum_age_to_vote = models.PositiveIntegerField()
     renewal_month = models.PositiveIntegerField(null=True, blank=True)
 
@@ -168,7 +166,7 @@ class Membership(Loggable, models.Model):
     form_filled = models.DateField()
     paid = models.DateField(null=True, blank=True)
     amount_paid = models.PositiveIntegerField()
-    payment_method = models.PositiveIntegerField(choices=sorted(PAYMENT_METHODS.items()))
+    payment_method = models.TextField(choices=PaymentMethod.choices())
     is_renewal = models.BooleanField()
     notes = models.TextField(null=True, blank=True)
 

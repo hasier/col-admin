@@ -1,19 +1,15 @@
-PAYMENT_METHOD_CASH = 1
-PAYMENT_METHOD_TRANSFER = 2
-PAYMENT_METHOD_SUMUP = 3
+import enum
 
-PAYMENT_METHODS = {
-    PAYMENT_METHOD_CASH: 'Cash',
-    PAYMENT_METHOD_TRANSFER: 'Bank transfer',
-    PAYMENT_METHOD_SUMUP: 'SumUp',
-}
+from contrib.enum import ChoiceEnumMixin
 
-DAYS = 1
-WEEKS = 2
-MONTHS = 3
 
-TIME_UNIT_CHOICES = {
-    DAYS: 'Days',
-    WEEKS: 'Weeks',
-    MONTHS: 'Months',
-}
+class PaymentMethod(ChoiceEnumMixin, enum.Enum):
+    PAYMENT_METHOD_CASH = 'Cash'
+    PAYMENT_METHOD_TRANSFER = 'Bank transfer'
+    PAYMENT_METHOD_SUMUP = 'SumUp'
+
+
+class TimeUnit(ChoiceEnumMixin, enum.Enum):
+    DAYS = 'Days'
+    WEEKS = 'Weeks'
+    MONTHS = 'Months'

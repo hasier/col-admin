@@ -6,7 +6,7 @@ from material.admin.options import MaterialModelAdmin
 from material.admin.decorators import register
 
 from apps.membership import forms, models
-from apps.membership.constants import TIME_UNIT_CHOICES
+from apps.membership.constants import TimeUnit
 from apps.membership.filters import EligibleForVoteParticipantFilter, RequiresAttentionFilter
 from apps.membership.forms import InlineMembershipForm, ParticipantForm
 from apps.membership.formsets import ContactInfoInlineFormset
@@ -250,7 +250,7 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModelAdminMixin, MaterialMode
     def get_time_to_vote_since_membership(self, obj):
         return '{} {}'.format(
             obj.time_to_vote_since_membership,
-            TIME_UNIT_CHOICES[obj.time_unit_to_vote_since_membership].lower(),
+            TimeUnit(obj.time_unit_to_vote_since_membership).value.lower(),
         )
 
     get_time_to_vote_since_membership.short_description = 'Time to vote since membership'

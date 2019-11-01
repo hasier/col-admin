@@ -1,7 +1,7 @@
 from django.db import migrations, models
 import django.db.models.deletion
 
-from apps.membership.constants import TIME_UNIT_CHOICES, PAYMENT_METHODS
+from apps.membership.constants import TimeUnit, PaymentMethod
 
 
 class Migration(migrations.Migration):
@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
                 ('time_to_vote_since_membership', models.PositiveIntegerField()),
                 (
                     'time_unit_to_vote_since_membership',
-                    models.PositiveIntegerField(choices=sorted(TIME_UNIT_CHOICES.items())),
+                    models.TextField(choices=TimeUnit.choices()),
                 ),
                 ('minimum_age_to_vote', models.PositiveIntegerField()),
                 ('renewal_month', models.PositiveIntegerField(blank=True, null=True)),
@@ -129,10 +129,7 @@ class Migration(migrations.Migration):
                 ('form_filled', models.DateField()),
                 ('paid', models.DateField(blank=True, null=True)),
                 ('amount_paid', models.PositiveIntegerField()),
-                (
-                    'payment_method',
-                    models.PositiveIntegerField(choices=sorted(PAYMENT_METHODS.items())),
-                ),
+                ('payment_method', models.TextField(choices=PaymentMethod.choices()),),
                 ('is_renewal', models.BooleanField()),
                 ('notes', models.TextField(blank=True, null=True)),
                 (
