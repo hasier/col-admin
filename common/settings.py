@@ -45,12 +45,8 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
-        },
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
-        },
+        'require_debug_false': {'()': 'django.utils.log.RequireDebugFalse'},
+        'require_debug_true': {'()': 'django.utils.log.RequireDebugTrue'},
     },
     'formatters': {
         'django.server': {
@@ -59,10 +55,7 @@ LOGGING = {
         },
     },
     'handlers': {
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-        },
+        'console': {'level': 'INFO', 'class': 'logging.StreamHandler'},
         'django.server': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
@@ -71,27 +64,17 @@ LOGGING = {
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
+            'class': 'django.utils.log.AdminEmailHandler',
         },
     },
     'loggers': {
-        'django': {
-            'handlers': ['console', 'mail_admins'],
-            'level': 'INFO',
-        },
-        'django.server': {
-            'handlers': ['django.server'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-    }
+        'django': {'handlers': ['console', 'mail_admins'], 'level': 'INFO'},
+        'django.server': {'handlers': ['django.server'], 'level': 'INFO', 'propagate': False},
+    },
 }
 
 # Sentry
-sentry_sdk.init(
-    dsn=env('SENTRY_DSN', default=None),
-    integrations=[DjangoIntegration()]
-)
+sentry_sdk.init(dsn=env('SENTRY_DSN', default=None), integrations=[DjangoIntegration()])
 
 # Email backend settings
 # https://github.com/sklarsa/django-sendgrid-v5
@@ -133,7 +116,7 @@ ROOT_URLCONF = 'apps.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [(os.path.join(BASE_DIR, 'templates')), ],
+        'DIRS': [(os.path.join(BASE_DIR, 'templates'))],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -152,35 +135,25 @@ WSGI_APPLICATION = 'apps.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 # Change 'default' database configuration with $DATABASE_URL.
-DATABASES = {
-    'default': dj_database_url.config(conn_max_age=500)
-}
+DATABASES = {'default': dj_database_url.config(conn_max_age=500)}
 if not DATABASES['default']:
-    raise RuntimeError('Cannot start without a valid DB connection: {}'.format(DATABASES['default']))
+    raise RuntimeError(
+        'Cannot start without a valid DB connection: {}'.format(DATABASES['default'])
+    )
 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": env('REDISCLOUD_URL'),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
     }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 # Internationalization

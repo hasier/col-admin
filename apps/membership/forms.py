@@ -22,7 +22,9 @@ class GeneralSetupForm(ModelForm):
         last = models.GeneralSetup.get_last()
         if last:
             if last.pk != self.instance.pk and valid_from < last.valid_from:
-                errors['valid_until'] = f'The new setup must happen later than the last one: {last.valid_from}'
+                errors[
+                    'valid_until'
+                ] = f'The new setup must happen later than the last one: {last.valid_from}'
 
         if errors:
             raise ValidationError(errors)
@@ -41,11 +43,15 @@ class ParticipantForm(ModelForm):
                     if participant.is_legal_aged:
                         break
                 else:
-                    errors['family'] = 'An under aged participant must belong to a family ' \
-                                       'with at least one adult participant'
+                    errors['family'] = (
+                        'An under aged participant must belong to a family '
+                        'with at least one adult participant'
+                    )
             else:
-                errors['family'] = 'An under aged participant must belong to a family, ' \
-                                   'and the family must have at least one adult participant'
+                errors['family'] = (
+                    'An under aged participant must belong to a family, '
+                    'and the family must have at least one adult participant'
+                )
 
         if errors:
             raise ValidationError(errors)
@@ -57,8 +63,14 @@ class InlineMembershipForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if 'instance' in kwargs:
-            for field_name in ('member_type', 'participant', 'effective_from', 'form_filled', 'amount_paid',
-                               'payment_method'):
+            for field_name in (
+                'member_type',
+                'participant',
+                'effective_from',
+                'form_filled',
+                'amount_paid',
+                'payment_method',
+            ):
                 self.fields[field_name].disabled = True
             if kwargs['instance'].paid:
                 self.fields['paid'].disabled = True

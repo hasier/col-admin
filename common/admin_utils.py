@@ -17,7 +17,9 @@ class TextAreaToInputMixin(object):
         return self.area_to_input_field_names
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
-        formfield = super(TextAreaToInputMixin, self).formfield_for_dbfield(db_field, request, **kwargs)
+        formfield = super(TextAreaToInputMixin, self).formfield_for_dbfield(
+            db_field, request, **kwargs
+        )
         if db_field.name in self.get_area_to_input_field_names():
             formfield.widget = TextInput(attrs=formfield.widget.attrs)
         return formfield
@@ -60,20 +62,25 @@ class AppendOnlyModelAdminMixin(object):
             # Add tweaks to the title and to hide all save buttons
             extra_context.update(self._get_extra_for_mode(self.change_view_submit_mode))
             extra_context['title'] = force_text(self.model._meta.verbose_name)
-        return super(AppendOnlyModelAdminMixin, self).change_view(request, object_id,
-                                                                  form_url=form_url, extra_context=extra_context)
+        return super(AppendOnlyModelAdminMixin, self).change_view(
+            request, object_id, form_url=form_url, extra_context=extra_context
+        )
 
     def changelist_view(self, request, extra_context=None):
         if not extra_context or 'title' not in extra_context:
             extra_context = extra_context or dict()
             extra_context['title'] = force_text(self.model._meta.verbose_name_plural)
-        return super(AppendOnlyModelAdminMixin, self).changelist_view(request, extra_context=extra_context)
+        return super(AppendOnlyModelAdminMixin, self).changelist_view(
+            request, extra_context=extra_context
+        )
 
     def add_view(self, request, form_url='', extra_context=None):
         extra_context = extra_context or dict()
         # Add tweaks to just display the save button
         extra_context.update(self._get_extra_for_mode(self.add_view_submit_mode))
-        return super(AppendOnlyModelAdminMixin, self).add_view(request, form_url=form_url, extra_context=extra_context)
+        return super(AppendOnlyModelAdminMixin, self).add_view(
+            request, form_url=form_url, extra_context=extra_context
+        )
 
     def get_readonly_fields(self, request, obj=None):
         if obj:

@@ -17,9 +17,7 @@ class EligibleForVoteParticipantFilter(SimpleListFilter):
         super(EligibleForVoteParticipantFilter, self).__init__(*args, **kwargs)
 
     def lookups(self, request, model_admin):
-        return (
-            ('today', 'Today'),
-        )
+        return (('today', 'Today'),)
 
     def queryset(self, request, queryset):
         value = self.value()
@@ -35,35 +33,40 @@ class EligibleForVoteParticipantFilter(SimpleListFilter):
         setup = GeneralSetup.get_for_date(date)
 
         return (
-            queryset
-            .annotate(
-                reference_date=Value(date, output_field=DateField()),
-                min_age=DurationValue(f"{setup.minimum_age_to_vote} YEARS", output_field=DurationField()),
-                vote_interval=DurationValue(
-                    f'{setup.time_to_vote_since_membership} {setup.time_unit_to_vote_since_membership.upper()}',
-                    output_field=DurationField(),
-                ),
-            )
-            .filter(
-                reference_date__range=(
-                    Case(
-                        When(
-                            memberships__is_renewal=True,
-                            then=F('memberships__effective_from'),
+            (
+                queryset.annotate(
+                    reference_date=Value(date, output_field=DateField()),
+                    min_age=DurationValue(
+                        f"{setup.minimum_age_to_vote} YEARS", output_field=DurationField()
+                    ),
+                    vote_interval=DurationValue(
+                        f'{setup.time_to_vote_since_membership} '
+                        f'{setup.time_unit_to_vote_since_membership.upper()}',
+                        output_field=DurationField(),
+                    ),
+                ).filter(
+                    reference_date__range=(
+                        Case(
+                            When(
+                                memberships__is_renewal=True,
+                                then=F('memberships__effective_from'),
+                            ),
+                            default=F('memberships__effective_from') + F('vote_interval'),
+                            output_field=DateField(),
                         ),
-                        default=F('memberships__effective_from') + F('vote_interval'),
-                        output_field=DateField(),
+                        Coalesce(
+                            'memberships__effective_until',
+                            Value(date.max, output_field=DateField()),
+                            output_field=DateField(),
+                        ),
                     ),
-                    Coalesce(
-                        'memberships__effective_until',
-                        Value(date.max, output_field=DateField()),
-                        output_field=DateField(),
-                    ),
-                ),
-                reference_date__lte=F('min_age') + F('date_of_birth'),
-                memberships__member_type__tier__can_vote=True,
+                    reference_date__lte=F('min_age') + F('date_of_birth'),
+                    memberships__member_type__tier__can_vote=True,
+                )
             )
-        ).order_by('id', '-memberships__effective_from').distinct('id')
+            .order_by('id', '-memberships__effective_from')
+            .distinct('id')
+        )
 
 
 class RequiresAttentionFilter(SimpleListFilter):
@@ -74,9 +77,7 @@ class RequiresAttentionFilter(SimpleListFilter):
         super(RequiresAttentionFilter, self).__init__(*args, **kwargs)
 
     def lookups(self, request, model_admin):
-        return (
-            ('1', 'Check participants'),
-        )
+        return (('1', 'Check participants'),)
 
     def queryset(self, request, queryset):
         value = self.value()
@@ -87,15 +88,15 @@ class RequiresAttentionFilter(SimpleListFilter):
             return queryset
 
         return queryset.filter(
-            Q(contact_info=None) |
-            Q(contact_info__address=None) |
-            Q(contact_info__address='') |
-            Q(contact_info__postcode=None) |
-            Q(contact_info__postcode='') |
-            Q(contact_info__phone=None) |
-            Q(contact_info__phone='') |
-            Q(contact_info__email=None) |
-            Q(contact_info__email='') |
-            Q(emergency_contacts=None) |
-            Q(memberships__paid=None)
+            Q(contact_info=None)
+            | Q(contact_info__address=None)
+            | Q(contact_info__address='')
+            | Q(contact_info__postcode=None)
+            | Q(contact_info__postcode='')
+            | Q(contact_info__phone=None)
+            | Q(contact_info__phone='')
+            | Q(contact_info__email=None)
+            | Q(contact_info__email='')
+            | Q(emergency_contacts=None)
+            | Q(memberships__paid=None)
         )

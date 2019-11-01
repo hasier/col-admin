@@ -15,7 +15,9 @@ from common.model_utils import Loggable
 class GeneralSetup(Loggable, models.Model):
     valid_from = models.DateField(db_index=True)
     time_to_vote_since_membership = models.PositiveIntegerField()
-    time_unit_to_vote_since_membership = models.PositiveIntegerField(choices=sorted(TIME_UNIT_CHOICES.items()))
+    time_unit_to_vote_since_membership = models.PositiveIntegerField(
+        choices=sorted(TIME_UNIT_CHOICES.items())
+    )
     minimum_age_to_vote = models.PositiveIntegerField()
     renewal_month = models.PositiveIntegerField(null=True, blank=True)
 
@@ -41,14 +43,17 @@ class GeneralSetup(Loggable, models.Model):
 
     def get_previous_renewal(self, from_date):
         dtstart = datetime(from_date.year - 1, from_date.month, 1) + relativedelta(months=1)
-        return max(self.valid_from, rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0].date())
+        return max(
+            self.valid_from,
+            rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0].date(),
+        )
 
     def get_next_renewal(self, from_date):
         dtstart = datetime(from_date.year, from_date.month, 1)
         next_setup = self.get_next(self.valid_from)
         return min(
             next_setup.valid_from if next_setup else date.max,
-            rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0].date()
+            rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0].date(),
         )
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
@@ -57,8 +62,12 @@ class GeneralSetup(Loggable, models.Model):
         delete_memoized(self.__class__.get_current)
         delete_memoized(self.__class__.get_next)
         delete_memoized(is_membership_setup_initialized)
-        return super(GeneralSetup, self).save(force_insert=force_insert, force_update=force_update, using=using,
-                                              update_fields=update_fields)
+        return super(GeneralSetup, self).save(
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields,
+        )
 
 
 class Family(Loggable, models.Model):
@@ -75,7 +84,9 @@ class Participant(Loggable, models.Model):
     name = models.TextField()
     surname = models.TextField()
     date_of_birth = models.DateField()
-    family = models.ForeignKey(Family, null=True, blank=True, on_delete=models.PROTECT, related_name='family_members')
+    family = models.ForeignKey(
+        Family, null=True, blank=True, on_delete=models.PROTECT, related_name='family_members'
+    )
     participation_form_filled = models.DateField()
 
     @property
@@ -91,7 +102,9 @@ class Participant(Loggable, models.Model):
 
 
 class ContactInfo(Loggable, models.Model):
-    participant = models.ForeignKey(Participant, on_delete=models.PROTECT, related_name='contact_info')
+    participant = models.ForeignKey(
+        Participant, on_delete=models.PROTECT, related_name='contact_info'
+    )
     address = models.TextField(blank=True)
     postcode = models.TextField(blank=True)
     phone = models.TextField(blank=True)
@@ -99,14 +112,18 @@ class ContactInfo(Loggable, models.Model):
 
 
 class HealthInfo(Loggable, models.Model):
-    participant = models.ForeignKey(Participant, on_delete=models.PROTECT, related_name='health_info')
+    participant = models.ForeignKey(
+        Participant, on_delete=models.PROTECT, related_name='health_info'
+    )
     height = models.PositiveIntegerField(null=True, blank=True)
     weight = models.PositiveIntegerField(null=True, blank=True)
     info = models.TextField()
 
 
 class EmergencyContact(Loggable, models.Model):
-    participant = models.ForeignKey(Participant, on_delete=models.PROTECT, related_name='emergency_contacts')
+    participant = models.ForeignKey(
+        Participant, on_delete=models.PROTECT, related_name='emergency_contacts'
+    )
     full_name = models.TextField()
     phone = models.TextField()
     relation = models.TextField()
@@ -133,7 +150,9 @@ class Tier(Loggable, models.Model):
     base_amount = models.PositiveIntegerField()
 
     def is_usable_for(self, ref_date):
-        return self.usable_from <= ref_date and (self.usable_until is None or self.usable_until >= ref_date)
+        return self.usable_from <= ref_date and (
+            self.usable_until is None or self.usable_until >= ref_date
+        )
 
     def __str__(self):
         return '{} ({} - {})'.format(self.name, self.usable_from, self.usable_until or '')
@@ -141,7 +160,9 @@ class Tier(Loggable, models.Model):
 
 class Membership(Loggable, models.Model):
     tier = models.ForeignKey(Tier, on_delete=models.PROTECT, related_name='memberships')
-    participant = models.ForeignKey(Participant, on_delete=models.PROTECT, related_name='memberships')
+    participant = models.ForeignKey(
+        Participant, on_delete=models.PROTECT, related_name='memberships'
+    )
     effective_from = models.DateField()
     effective_until = models.DateField(null=True, blank=True)
     form_filled = models.DateField()
@@ -167,9 +188,9 @@ class Membership(Loggable, models.Model):
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         try:
             last_membership = (
-                self.__class__.objects
-                .filter(participant_id=self.participant_id)
-                .order_by('-effective_from')
+                self.__class__.objects.filter(participant_id=self.participant_id).order_by(
+                    '-effective_from'
+                )
             )[0]
         except IndexError:
             self.is_renewal = False
@@ -179,11 +200,13 @@ class Membership(Loggable, models.Model):
             delta = get_timedelta_from_unit(
                 setup.time_to_vote_since_membership, setup.time_unit_to_vote_since_membership
             )
-            # If the renewing member has stopped being member for longer than that, it is not a renewal
+            # If the renewing member stopped being member for longer than that, it is not a renewal
             self.is_renewal = last_membership.is_active_on(self.effective_from - delta)
 
         if self.effective_from and not self.effective_until:
-            self.effective_until = GeneralSetup.get_for_date(self.effective_from).get_next_renewal(self.effective_from)
+            self.effective_until = GeneralSetup.get_for_date(self.effective_from).get_next_renewal(
+                self.effective_from
+            )
 
         super(Membership, self).save(
             force_insert=force_insert,

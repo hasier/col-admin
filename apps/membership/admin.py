@@ -11,7 +11,12 @@ from apps.membership.filters import EligibleForVoteParticipantFilter, RequiresAt
 from apps.membership.forms import InlineMembershipForm, ParticipantForm
 from apps.membership.formsets import ContactInfoInlineFormset
 from common.form_utils import RequiredOnceInlineFormSet
-from common.admin_utils import AppendOnlyModelAdminMixin, RemoveDeleteActionMixin, TextAreaToInputMixin, ViewColumnMixin
+from common.admin_utils import (
+    AppendOnlyModelAdminMixin,
+    RemoveDeleteActionMixin,
+    TextAreaToInputMixin,
+    ViewColumnMixin,
+)
 
 
 class HealthInfoInline(admin.TabularInline):
@@ -28,7 +33,9 @@ class EmergencyContactInline(TextAreaToInputMixin, admin.TabularInline):
     can_delete = False
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
-        formfield = super(EmergencyContactInline, self).formfield_for_dbfield(db_field, request, **kwargs)
+        formfield = super(EmergencyContactInline, self).formfield_for_dbfield(
+            db_field, request, **kwargs
+        )
         if isinstance(db_field, TextField):
             formfield.widget.attrs.update(style='width: 90%;')
         return formfield
@@ -42,7 +49,9 @@ class ContactInfoInline(TextAreaToInputMixin, admin.TabularInline):
     can_delete = False
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
-        formfield = super(ContactInfoInline, self).formfield_for_dbfield(db_field, request, **kwargs)
+        formfield = super(ContactInfoInline, self).formfield_for_dbfield(
+            db_field, request, **kwargs
+        )
         if isinstance(db_field, TextField):
             formfield.widget.attrs.update(style='width: 90%;')
         return formfield
@@ -88,7 +97,9 @@ class FamilyAdmin(TextAreaToInputMixin, MaterialModelAdmin):
 
 def generate_participant_table(modeladmin, request, queryset):
     queryset = queryset.order_by('surname')
-    return render(request, 'col/participant_export.html', context=dict(participants=queryset.all()))
+    return render(
+        request, 'col/participant_export.html', context=dict(participants=queryset.all())
+    )
 
 
 generate_participant_table.short_description = "Generate participant PDF"
@@ -119,7 +130,9 @@ class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, MaterialMo
             action = None
 
         # If the action is generate_participant_table and no check box has been marked
-        if action == generate_participant_table.__name__ and not request.POST.getlist(helpers.ACTION_CHECKBOX_NAME):
+        if action == generate_participant_table.__name__ and not request.POST.getlist(
+            helpers.ACTION_CHECKBOX_NAME
+        ):
             request.POST._mutable = True
             # Activate to select across pages and avoid PK filter
             request.POST['select_across'] = True
@@ -174,7 +187,14 @@ class TierAdmin(TextAreaToInputMixin, MaterialModelAdmin):
         readonly = ()
         if obj:
             if any(mc.memberships.count() for mc in obj.membership_combinations.all()):
-                readonly += ('name', 'can_vote', 'needs_renewal', 'usable_from', 'base_amount', 'member_type')
+                readonly += (
+                    'name',
+                    'can_vote',
+                    'needs_renewal',
+                    'usable_from',
+                    'base_amount',
+                    'member_type',
+                )
             if obj.usable_until:
                 readonly += ('usable_until',)
         return readonly + self.readonly_fields
@@ -206,15 +226,11 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModelAdminMixin, MaterialMode
     actions = None
     form = forms.GeneralSetupForm
     fieldsets = (
-        (None, {
-            'fields': [
-                'minimum_age_to_vote',
-                'renewal_month',
-            ]
-        }),
-        ('Time to vote since membership', {
-            'fields': ('time_to_vote_since_membership', 'time_unit_to_vote_since_membership')
-        }),
+        (None, {'fields': ['minimum_age_to_vote', 'renewal_month',]}),
+        (
+            'Time to vote since membership',
+            {'fields': ('time_to_vote_since_membership', 'time_unit_to_vote_since_membership')},
+        ),
     )
     list_display = [
         'get_view',
@@ -233,7 +249,8 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModelAdminMixin, MaterialMode
 
     def get_time_to_vote_since_membership(self, obj):
         return '{} {}'.format(
-            obj.time_to_vote_since_membership, TIME_UNIT_CHOICES[obj.time_unit_to_vote_since_membership].lower()
+            obj.time_to_vote_since_membership,
+            TIME_UNIT_CHOICES[obj.time_unit_to_vote_since_membership].lower(),
         )
 
     get_time_to_vote_since_membership.short_description = 'Time to vote since membership'
