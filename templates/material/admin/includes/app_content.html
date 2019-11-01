@@ -1,11 +1,11 @@
-{% load i18n admin_urls utils %}
+{% load i18n admin_urls membership %}
 
 <div class="content-wrapper">
   <div class="app-list">
-    {% is_system_initialized as is_system_initialized %}  {# CUSTOM var #}
+    {% is_membership_setup_initialized as is_membership_setup_initialized %}  {# CUSTOM var #}
     {% if app_list %}
       {% for app in app_list %}
-        {% if app.app_label == 'membership' or app.app_label == 'auth' or is_system_initialized %}  {# CUSTOM if #}
+        {% if app.app_label == 'membership' or app.app_label == 'auth' or is_membership_setup_initialized %}  {# CUSTOM if #}
           <div class="app">
             <div class="card">
               <div class="card-content">
@@ -14,7 +14,7 @@
                 </div>
                 <div class="row">
                   {% for model in app.models %}
-                      {% if app.app_label == 'membership' and model.object_name|lower == 'generalsetup' or app.app_label == 'auth' or is_system_initialized %}  {# CUSTOM if #}
+                      {% if app.app_label == 'membership' and model.object_name|lower == 'generalsetup' or app.app_label == 'auth' or is_membership_setup_initialized %}  {# CUSTOM if #}
                         <div class="app-item col s6 m6 l4">
                           <a {% if model.admin_url %}href="{{ model.admin_url }}"{% else %}class="disabled"{% endif %}>
                             {% if not model.proxy %}

@@ -1,4 +1,4 @@
-{% load i18n material static admin_urls utils %}
+{% load i18n material static admin_urls membership %}
 
 {% block extrastyle %}
 <link rel="stylesheet" type="text/css" href="{% static "admin/css/widgets.css" %}" />{# CUSTOM css #}
@@ -14,7 +14,7 @@
 <script type="text/javascript" src="{% static "admin/js/admin/DateTimeShortcuts.js" %}"></script>
 {% endblock %}
 
-{% is_system_initialized as is_system_initialized %}  {# CUSTOM var #}
+{% is_membership_setup_initialized as is_membership_setup_initialized %}  {# CUSTOM var #}
 
 <div class="scroll-pane">
     {% if not mobile %}
@@ -34,7 +34,7 @@
                 </div>
             </li>
             {% for app in available_apps %}
-                {% if app.app_label == 'membership' or app.app_label == 'auth' or is_system_initialized %}  {# CUSTOM if #}
+                {% if app.app_label == 'membership' or app.app_label == 'auth' or is_membership_setup_initialized %}  {# CUSTOM if #}
                     <li class="scrollspy">
                         <div class="collapsible-header">
                             <i class="material-icons">{% if app.icon %}{{ app.icon }}{% else %}settings{% endif %}</i>
@@ -42,7 +42,7 @@
                         </div>
                         <div class="collapsible-body">
                             {% for model in app.models %}
-                                {% if app.app_label == 'membership' and model.object_name|lower == 'generalsetup' or app.app_label == 'auth' or is_system_initialized %}  {# CUSTOM if #}
+                                {% if app.app_label == 'membership' and model.object_name|lower == 'generalsetup' or app.app_label == 'auth' or is_membership_setup_initialized %}  {# CUSTOM if #}
                                     {% if model.admin_url %}
                                         <div {% if model.admin_url in request.path %}class="active"{% endif %}>
                                             <a href="{{ model.admin_url }}">

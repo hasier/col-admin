@@ -7,15 +7,9 @@ from django.utils import timezone
 from memoize import delete_memoized, memoize
 
 from apps.membership.constants import PAYMENT_METHODS, TIME_UNIT_CHOICES
-from apps.membership.templatetags.utils import is_system_initialized
+from apps.membership.templatetags.membership import is_membership_setup_initialized
 from apps.membership.utils import get_timedelta_from_unit
-
-
-class Loggable(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        abstract = True
+from common.model_utils import Loggable
 
 
 class GeneralSetup(Loggable, models.Model):
@@ -62,7 +56,7 @@ class GeneralSetup(Loggable, models.Model):
         delete_memoized(self.__class__.get_for_date)
         delete_memoized(self.__class__.get_current)
         delete_memoized(self.__class__.get_next)
-        delete_memoized(is_system_initialized)
+        delete_memoized(is_membership_setup_initialized)
         return super(GeneralSetup, self).save(force_insert=force_insert, force_update=force_update, using=using,
                                               update_fields=update_fields)
 

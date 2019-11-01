@@ -9,8 +9,9 @@ from apps.membership import forms, models
 from apps.membership.constants import TIME_UNIT_CHOICES
 from apps.membership.filters import EligibleForVoteParticipantFilter, RequiresAttentionFilter
 from apps.membership.forms import InlineMembershipForm, ParticipantForm
-from apps.membership.formsets import ContactInfoInlineFormset, RequiredOnceInlineFormSet
-from common.mixins import AppendOnlyModel, RemoveDeleteActionMixin, TextAreaToInputMixin, ViewColumnMixin
+from apps.membership.formsets import ContactInfoInlineFormset
+from common.form_utils import RequiredOnceInlineFormSet
+from common.admin_utils import AppendOnlyModelAdminMixin, RemoveDeleteActionMixin, TextAreaToInputMixin, ViewColumnMixin
 
 
 class HealthInfoInline(admin.TabularInline):
@@ -130,7 +131,7 @@ class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, MaterialMo
 
 
 @register(models.Membership)
-class MembershipAdmin(AppendOnlyModel, MaterialModelAdmin):
+class MembershipAdmin(AppendOnlyModelAdminMixin, MaterialModelAdmin):
     icon_name = 'card_membership'
 
     date_hierarchy = 'form_filled'
@@ -145,7 +146,7 @@ class MembershipAdmin(AppendOnlyModel, MaterialModelAdmin):
         'payment_method',
         'is_renewal',
     ]
-    change_view_submit_mode = AppendOnlyModel.JUST_SAVE_MODE
+    change_view_submit_mode = AppendOnlyModelAdminMixin.JUST_SAVE_MODE
 
     def get_ordering(self, request):
         return ['created_at']
@@ -199,12 +200,11 @@ class MemberTypeAdmin(TextAreaToInputMixin, MaterialModelAdmin):
 
 
 @register(models.GeneralSetup)
-class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModel, MaterialModelAdmin):
+class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModelAdminMixin, MaterialModelAdmin):
     icon_name = 'settings'
 
     actions = None
     form = forms.GeneralSetupForm
-    change_view_submit_mode = AppendOnlyModel.JUST_SAVE_MODE
     fieldsets = (
         (None, {
             'fields': [
