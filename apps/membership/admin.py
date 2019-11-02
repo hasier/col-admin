@@ -10,6 +10,7 @@ from apps.membership.constants import TimeUnit
 from apps.membership.filters import EligibleForVoteParticipantFilter, RequiresAttentionFilter
 from apps.membership.forms import InlineMembershipForm, ParticipantForm
 from apps.membership.formsets import ContactInfoInlineFormset
+from apps.membership.templatetags import membership
 from common.form_utils import RequiredOnceInlineFormSet
 from common.admin_utils import (
     AppendOnlyModelAdminMixin,
@@ -17,6 +18,13 @@ from common.admin_utils import (
     TextAreaToInputMixin,
     ViewColumnMixin,
 )
+
+
+class RequiresInitModelAdmin(admin.ModelAdmin):
+    def get_urls(self):
+        if not membership.is_membership_setup_initialized():
+            return []
+        return super().get_urls()
 
 
 class HealthInfoInline(admin.TabularInline):
@@ -67,7 +75,7 @@ class MembershipInline(TextAreaToInputMixin, admin.TabularInline):
 
 
 @register(models.Family)
-class FamilyAdmin(TextAreaToInputMixin, MaterialModelAdmin):
+class FamilyAdmin(TextAreaToInputMixin, RequiresInitModelAdmin, MaterialModelAdmin):
     icon_name = 'child_friendly'
 
     actions = None
@@ -106,7 +114,9 @@ generate_participant_table.short_description = "Generate participant PDF"
 
 
 @register(models.Participant)
-class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, MaterialModelAdmin):
+class ParticipantAdmin(
+    RemoveDeleteActionMixin, TextAreaToInputMixin, RequiresInitModelAdmin, MaterialModelAdmin
+):
     icon_name = 'person_outline'
 
     actions = [generate_participant_table]
@@ -144,7 +154,7 @@ class ParticipantAdmin(RemoveDeleteActionMixin, TextAreaToInputMixin, MaterialMo
 
 
 @register(models.Membership)
-class MembershipAdmin(AppendOnlyModelAdminMixin, MaterialModelAdmin):
+class MembershipAdmin(AppendOnlyModelAdminMixin, RequiresInitModelAdmin, MaterialModelAdmin):
     icon_name = 'card_membership'
 
     date_hierarchy = 'form_filled'
@@ -172,7 +182,7 @@ class MembershipAdmin(AppendOnlyModelAdminMixin, MaterialModelAdmin):
 
 
 @register(models.Tier)
-class TierAdmin(TextAreaToInputMixin, MaterialModelAdmin):
+class TierAdmin(TextAreaToInputMixin, RequiresInitModelAdmin, MaterialModelAdmin):
     icon_name = 'layers'
 
     area_to_input_field_names = ['name']
@@ -201,7 +211,7 @@ class TierAdmin(TextAreaToInputMixin, MaterialModelAdmin):
 
 
 @register(models.MemberType)
-class MemberTypeAdmin(TextAreaToInputMixin, MaterialModelAdmin):
+class MemberTypeAdmin(TextAreaToInputMixin, RequiresInitModelAdmin, MaterialModelAdmin):
     icon_name = 'people_outline'
 
     area_to_input_field_names = ['type_name']
@@ -250,7 +260,7 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModelAdminMixin, MaterialMode
     def get_time_to_vote_since_membership(self, obj):
         return '{} {}'.format(
             obj.time_to_vote_since_membership,
-            TimeUnit(obj.time_unit_to_vote_since_membership).value.lower(),
+            TimeUnit.get_from_value(obj.time_unit_to_vote_since_membership).value.lower(),
         )
 
     get_time_to_vote_since_membership.short_description = 'Time to vote since membership'

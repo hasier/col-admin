@@ -7,7 +7,7 @@ from apps.membership.constants import TimeUnit
 
 
 def get_timedelta_from_unit(time_diff: int, unit: str) -> Union[timedelta, relativedelta]:
-    unit = TimeUnit(unit)
+    unit = TimeUnit.get_from_value(unit)
     if unit == TimeUnit.DAYS:
         return timedelta(days=time_diff)
 

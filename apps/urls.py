@@ -8,6 +8,5 @@ site.site_title = _('Castellers of London')
 site.favicon = static('CoL_Logo.png')
 
 urlpatterns = [
-    path('admin/', include('material.admin.urls')),
     path('', include('apps.login.urls')),
 ]

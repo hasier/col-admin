@@ -13,3 +13,7 @@ class TimeUnit(ChoiceEnumMixin, enum.Enum):
     DAYS = 'Days'
     WEEKS = 'Weeks'
     MONTHS = 'Months'
+
+    @classmethod
+    def get_from_value(cls, value):
+        return getattr(cls, value)
