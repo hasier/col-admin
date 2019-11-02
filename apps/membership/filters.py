@@ -6,29 +6,18 @@ from django.db.models.expressions import DurationValue, F, Value
 from django.db.models.functions import Coalesce
 
 from apps.membership.models import GeneralSetup
+from common.filters_utils import OnlyInputFilter
 from contrib.django.postgres.fields import DurationField
 
 
-class EligibleForVoteParticipantFilter(SimpleListFilter):
+class EligibleForVoteParticipantFilter(OnlyInputFilter):
     template = 'admin/date_input_filter.html'
 
-    title = 'Is eligible for vote'
+    title = 'Is eligible for vote on'
     parameter_name = 'vote_eligible'
 
     def __init__(self, *args, **kwargs):
         super(EligibleForVoteParticipantFilter, self).__init__(*args, **kwargs)
-
-    def lookups(self, request, model_admin):
-        return ((),)
-
-    def choices(self, changelist):
-        # Grab only the "all" option.
-        all_choice = next(super().choices(changelist))
-        all_choice['query_parts'] = (
-            (k, v) for k, v in changelist.get_filters_params().items() if k != self.parameter_name
-        )
-
-        yield all_choice
 
     def queryset(self, request, queryset):
         value = self.value()
@@ -78,26 +67,15 @@ class EligibleForVoteParticipantFilter(SimpleListFilter):
         )
 
 
-class RequiresAttentionFilter(SimpleListFilter):
+class RequiresAttentionFilter(OnlyInputFilter):
     template = 'admin/button_filter.html'
+    disable_submit_on_filtered = True
 
     title = 'Requires attention and updates'
     parameter_name = 'requires_attention'
 
     def __init__(self, *args, **kwargs):
         super(RequiresAttentionFilter, self).__init__(*args, **kwargs)
-
-    def lookups(self, request, model_admin):
-        return ((),)
-
-    def choices(self, changelist):
-        # Grab only the "all" option.
-        all_choice = next(super().choices(changelist))
-        all_choice['query_parts'] = (
-            (k, v) for k, v in changelist.get_filters_params().items() if k != self.parameter_name
-        )
-
-        yield all_choice
 
     def queryset(self, request, queryset):
         value = self.value()
@@ -115,5 +93,5 @@ class RequiresAttentionFilter(SimpleListFilter):
             | Q(contact_info__email=None)
             | Q(contact_info__email='')
             | Q(emergency_contacts=None)
-            | Q(memberships__paid=None)
+            | Q(memberships__paid_on=None)
         )

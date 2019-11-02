@@ -1,0 +1,33 @@
+{% load i18n %}
+
+<h3>{% blocktrans with filter_title=title %} By {{ filter_title }} {% endblocktrans %}</h3>
+<ul style="padding: 0 0 0 15px;">
+    <li>
+        {% with choices.0 as all_choice %}
+            <form method="GET" action="">
+                <div style="{% for k, v in all_choice.block_attrs.items %}{{ k }}: {{ v }};{% endfor %}">
+
+                {% for k, v in all_choice.query_parts %}
+                    <input type="hidden" name="{{ k }}" value="{{ v }}"/>
+                {% endfor %}
+
+                {% block content %}{% endblock %}
+
+                <div style="display: flex; flex-direction: row; justify-content: flex-end;">
+                {% if not all_choice.selected %}
+                    <strong style="margin: 3px;"><a href="{{ all_choice.query_string }}"><i class="material-icons">clear</i>{% trans 'Remove' %}</a></strong>
+                {% endif %}
+
+                <input class="default waves-effect waves-light btn btn-small" style="margin: 3px;" type="submit" value="{% trans 'Filter' %}"
+                   {% if not all_choice.selected and all_choice.disable_submit_on_filtered %}disabled{% endif %}
+                >
+                </div>
+
+                </div>
+
+            </form>
+        {% endwith %}
+    </li>
+</ul>
+
+{% block extrascripts %}{% endblock %}
