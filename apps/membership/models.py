@@ -4,6 +4,7 @@ from dateutil.relativedelta import relativedelta
 from dateutil.rrule import YEARLY, rrule
 from django.db import models
 from django.utils import timezone
+from django.utils.dates import MONTHS
 from memoize import delete_memoized, memoize
 
 from apps.membership.constants import PaymentMethod, TimeUnit
@@ -17,7 +18,9 @@ class GeneralSetup(Loggable, models.Model):
     time_to_vote_since_membership = models.PositiveIntegerField()
     time_unit_to_vote_since_membership = models.TextField(choices=TimeUnit.choices())
     minimum_age_to_vote = models.PositiveIntegerField()
-    renewal_month = models.PositiveIntegerField(null=True, blank=True)
+    renewal_month = models.PositiveIntegerField(
+        null=True, blank=True, choices=sorted(MONTHS.items())
+    )
 
     @classmethod
     @memoize(86400)
@@ -85,14 +88,14 @@ class Participant(Loggable, models.Model):
     family = models.ForeignKey(
         Family, null=True, blank=True, on_delete=models.PROTECT, related_name='family_members'
     )
-    participation_form_filled = models.DateField()
+    participation_form_filled_on = models.DateField()
 
     @property
     def age(self):
         return relativedelta(timezone.now().date(), self.date_of_birth).years
 
     @property
-    def is_legal_aged(self):
+    def is_under_aged(self):
         return self.age >= 18
 
     def __str__(self):
@@ -164,7 +167,7 @@ class Membership(Loggable, models.Model):
     effective_from = models.DateField()
     effective_until = models.DateField(null=True, blank=True)
     form_filled = models.DateField()
-    paid = models.DateField(null=True, blank=True)
+    paid_on = models.DateField(null=True, blank=True)
     amount_paid = models.PositiveIntegerField()
     payment_method = models.TextField(choices=PaymentMethod.choices())
     is_renewal = models.BooleanField()

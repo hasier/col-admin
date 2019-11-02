@@ -11,7 +11,7 @@ class ContactInfoInlineFormset(RequiredOnceInlineFormSet):
                 return
 
             if form.cleaned_data and not form.cleaned_data.get('DELETE'):
-                if self.instance.is_legal_aged:
+                if not self.instance.is_under_aged:
                     errors = dict()
                     for field_name, value in (
                         ('address', form.cleaned_data.get('address')),

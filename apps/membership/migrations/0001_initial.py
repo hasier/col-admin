@@ -1,5 +1,6 @@
 from django.db import migrations, models
 import django.db.models.deletion
+from django.utils.dates import MONTHS
 
 from apps.membership.constants import TimeUnit, PaymentMethod
 
@@ -41,7 +42,12 @@ class Migration(migrations.Migration):
                     models.TextField(choices=TimeUnit.choices()),
                 ),
                 ('minimum_age_to_vote', models.PositiveIntegerField()),
-                ('renewal_month', models.PositiveIntegerField(blank=True, null=True)),
+                (
+                    'renewal_month',
+                    models.PositiveIntegerField(
+                        blank=True, null=True, choices=sorted(MONTHS.items())
+                    ),
+                ),
             ],
             options={'abstract': False,},
         ),
@@ -100,7 +106,7 @@ class Migration(migrations.Migration):
                 ('name', models.TextField()),
                 ('surname', models.TextField()),
                 ('date_of_birth', models.DateField()),
-                ('participation_form_filled', models.DateField()),
+                ('participation_form_filled_on', models.DateField()),
                 (
                     'family',
                     models.ForeignKey(
@@ -127,7 +133,7 @@ class Migration(migrations.Migration):
                 ('effective_from', models.DateField()),
                 ('effective_until', models.DateField(blank=True, null=True)),
                 ('form_filled', models.DateField()),
-                ('paid', models.DateField(blank=True, null=True)),
+                ('paid_on', models.DateField(blank=True, null=True)),
                 ('amount_paid', models.PositiveIntegerField()),
                 ('payment_method', models.TextField(choices=PaymentMethod.choices()),),
                 ('is_renewal', models.BooleanField()),

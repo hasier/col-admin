@@ -7,6 +7,12 @@ from apps.membership import models
 
 
 class GeneralSetupForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['time_to_vote_since_membership'].label = ''
+        self.fields['time_unit_to_vote_since_membership'].label = ''
+
     def clean(self):
         super(GeneralSetupForm, self).clean()
         errors = dict()
@@ -37,10 +43,10 @@ class ParticipantForm(ModelForm):
         super(ParticipantForm, self).clean()
         errors = dict()
         self.instance.date_of_birth = self.cleaned_data['date_of_birth']
-        if not self.instance.is_legal_aged:
+        if self.instance.is_under_aged:
             if self.cleaned_data.get('family'):
                 for participant in self.cleaned_data['family'].family_members.all():
-                    if participant.is_legal_aged:
+                    if not participant.is_under_aged:
                         break
                 else:
                     errors['family'] = (
@@ -72,8 +78,8 @@ class InlineMembershipForm(ModelForm):
                 'payment_method',
             ):
                 self.fields[field_name].disabled = True
-            if kwargs['instance'].paid:
-                self.fields['paid'].disabled = True
+            if kwargs['instance'].paid_on:
+                self.fields['paid_on'].disabled = True
 
     def clean(self):
         super(InlineMembershipForm, self).clean()

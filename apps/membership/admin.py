@@ -154,7 +154,7 @@ class MembershipAdmin(AppendOnlyModelAdminMixin, MaterialModelAdmin):
         'effective_from',
         'effective_until',
         'form_filled',
-        'paid',
+        'paid_on',
         'amount_paid',
         'payment_method',
         'is_renewal',
@@ -226,10 +226,10 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModelAdminMixin, MaterialMode
     actions = None
     form = forms.GeneralSetupForm
     fieldsets = (
-        (None, {'fields': ['minimum_age_to_vote', 'renewal_month',]}),
+        (None, {'fields': ('minimum_age_to_vote', 'renewal_month')}),
         (
-            'Time to vote since membership',
-            {'fields': ('time_to_vote_since_membership', 'time_unit_to_vote_since_membership')},
+            'Time to vote since membership started',
+            {'fields': (('time_to_vote_since_membership', 'time_unit_to_vote_since_membership'),)},
         ),
     )
     list_display = [
