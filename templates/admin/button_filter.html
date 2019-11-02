@@ -1,0 +1,27 @@
+{% load i18n %}
+
+<h3>{% blocktrans with filter_title=title %} By {{ filter_title }} {% endblocktrans %}</h3>
+<ul style="padding: 0 0 0 15px;">
+    <li>
+        {% with choices.0 as all_choice %}
+            <form method="GET" action="">
+                <span style="display: flex; flex-direction: row; justify-content: flex-end;">
+
+                {% for k, v in all_choice.query_parts %}
+                    <input type="hidden" name="{{ k }}" value="{{ v }}"/>
+                {% endfor %}
+
+                <input type="hidden" name="{{ spec.parameter_name }}" value="1"/>
+
+                {% if not all_choice.selected %}
+                    <strong style="margin: 3px;"><a href="{{ all_choice.query_string }}"><i class="material-icons">clear</i>{% trans 'Remove' %}</a></strong>
+                {% endif %}
+
+                <input style="margin: 3px;" type="submit" value="{% trans 'Filter' %}" {% if not all_choice.selected %}disabled{% endif %}>
+
+                </span>
+
+            </form>
+        {% endwith %}
+    </li>
+</ul>

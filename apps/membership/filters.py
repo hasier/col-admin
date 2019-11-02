@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from django.contrib.admin.filters import SimpleListFilter
 from django.db.models import Case, DateField, Q, When
@@ -10,6 +10,8 @@ from contrib.django.postgres.fields import DurationField
 
 
 class EligibleForVoteParticipantFilter(SimpleListFilter):
+    template = 'admin/date_input_filter.html'
+
     title = 'Is eligible for vote'
     parameter_name = 'vote_eligible'
 
@@ -17,20 +19,27 @@ class EligibleForVoteParticipantFilter(SimpleListFilter):
         super(EligibleForVoteParticipantFilter, self).__init__(*args, **kwargs)
 
     def lookups(self, request, model_admin):
-        return (('today', 'Today'),)
+        return ((),)
+
+    def choices(self, changelist):
+        # Grab only the "all" option.
+        all_choice = next(super().choices(changelist))
+        all_choice['query_parts'] = (
+            (k, v) for k, v in changelist.get_filters_params().items() if k != self.parameter_name
+        )
+
+        yield all_choice
 
     def queryset(self, request, queryset):
         value = self.value()
         if not value:
             return queryset
 
-        if value != 'today':
-            value = datetime.strptime(value, '%d/%m/%Y')
-        else:
-            value = datetime.now(timezone.utc)
-
-        date = value.date()
+        date = datetime.strptime(value, '%d/%m/%Y').date()
         setup = GeneralSetup.get_for_date(date)
+
+        if not setup:
+            return queryset
 
         return (
             (
@@ -70,6 +79,8 @@ class EligibleForVoteParticipantFilter(SimpleListFilter):
 
 
 class RequiresAttentionFilter(SimpleListFilter):
+    template = 'admin/button_filter.html'
+
     title = 'Requires attention and updates'
     parameter_name = 'requires_attention'
 
@@ -77,14 +88,20 @@ class RequiresAttentionFilter(SimpleListFilter):
         super(RequiresAttentionFilter, self).__init__(*args, **kwargs)
 
     def lookups(self, request, model_admin):
-        return (('1', 'Check participants'),)
+        return ((),)
+
+    def choices(self, changelist):
+        # Grab only the "all" option.
+        all_choice = next(super().choices(changelist))
+        all_choice['query_parts'] = (
+            (k, v) for k, v in changelist.get_filters_params().items() if k != self.parameter_name
+        )
+
+        yield all_choice
 
     def queryset(self, request, queryset):
         value = self.value()
         if not value:
-            return queryset
-
-        if value != '1':
             return queryset
 
         return queryset.filter(
