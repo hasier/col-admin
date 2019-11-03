@@ -52,7 +52,11 @@ class AppendOnlyModelAdminMixin(object):
 
         elif mode == self.HIDE_SUBMIT_LINE_MODE:
             extra['save_on_top'] = False
-            extra['submit_buttons_bottom'] = False
+            extra['show_save_as_new'] = False
+            extra['show_save'] = False
+            extra['show_save_and_add_another'] = False
+            extra['show_save_and_continue'] = False
+            extra['show_delete_link'] = False
 
         return extra
 
