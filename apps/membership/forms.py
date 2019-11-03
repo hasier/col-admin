@@ -10,8 +10,9 @@ class GeneralSetupForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields['time_to_vote_since_membership'].label = ''
-        self.fields['time_unit_to_vote_since_membership'].label = ''
+        if not self.instance.pk:
+            self.fields['time_to_vote_since_membership'].label = ''
+            self.fields['time_unit_to_vote_since_membership'].label = ''
 
     def clean(self):
         super(GeneralSetupForm, self).clean()

@@ -5,10 +5,9 @@ from dateutil.rrule import YEARLY, rrule
 from django.db import models
 from django.utils import timezone
 from django.utils.dates import MONTHS
-from memoize import delete_memoized, memoize
+from memoize import memoize
 
 from apps.membership.constants import PaymentMethod, TimeUnit
-from apps.membership.templatetags.membership import is_membership_setup_initialized
 from apps.membership.utils import get_timedelta_from_unit
 from common.model_utils import Loggable
 
@@ -55,19 +54,6 @@ class GeneralSetup(Loggable, models.Model):
         return min(
             next_setup.valid_from if next_setup else date.max,
             rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0].date(),
-        )
-
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        delete_memoized(self.__class__.get_last)
-        delete_memoized(self.__class__.get_for_date)
-        delete_memoized(self.__class__.get_current)
-        delete_memoized(self.__class__.get_next)
-        delete_memoized(is_membership_setup_initialized)
-        return super(GeneralSetup, self).save(
-            force_insert=force_insert,
-            force_update=force_update,
-            using=using,
-            update_fields=update_fields,
         )
 
 
@@ -189,9 +175,9 @@ class Membership(Loggable, models.Model):
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         try:
             last_membership = (
-                self.__class__.objects.filter(participant_id=self.participant_id).order_by(
-                    '-effective_from'
-                )
+                type(self)
+                .objects.filter(participant_id=self.participant_id)
+                .order_by('-effective_from')
             )[0]
         except IndexError:
             self.is_renewal = False
