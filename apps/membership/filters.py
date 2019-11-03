@@ -17,7 +17,7 @@ class EligibleForVoteParticipantFilter(OnlyInputFilter):
     parameter_name = 'vote_eligible'
 
     def __init__(self, *args, **kwargs):
-        super(EligibleForVoteParticipantFilter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def queryset(self, request, queryset):
         value = self.value()
@@ -75,7 +75,7 @@ class RequiresAttentionFilter(OnlyInputFilter):
     parameter_name = 'requires_attention'
 
     def __init__(self, *args, **kwargs):
-        super(RequiresAttentionFilter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def queryset(self, request, queryset):
         value = self.value()

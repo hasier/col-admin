@@ -1,4 +1,5 @@
 from django.forms.widgets import TextInput
+from django.template.defaultfilters import title
 from django.utils.encoding import force_text
 
 
@@ -17,15 +18,23 @@ class TextAreaToInputMixin(object):
         return self.area_to_input_field_names
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
-        formfield = super(TextAreaToInputMixin, self).formfield_for_dbfield(
-            db_field, request, **kwargs
-        )
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
         if db_field.name in self.get_area_to_input_field_names():
             formfield.widget = TextInput(attrs=formfield.widget.attrs)
         return formfield
 
 
-class AppendOnlyModelAdminMixin(object):
+class RemoveDeleteActionMixin(object):
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        try:
+            del actions['delete_selected']
+        except KeyError:
+            pass
+        return actions
+
+
+class AppendOnlyModelAdminMixin(RemoveDeleteActionMixin):
     """
     Disables the edition from a ModelAdmin, hiding the Save buttons and making all fields readonly.
 
@@ -65,26 +74,22 @@ class AppendOnlyModelAdminMixin(object):
             extra_context = extra_context or dict()
             # Add tweaks to the title and to hide all save buttons
             extra_context.update(self._get_extra_for_mode(self.change_view_submit_mode))
-            extra_context['title'] = force_text(self.model._meta.verbose_name)
-        return super(AppendOnlyModelAdminMixin, self).change_view(
+            extra_context['title'] = title(force_text(self.model._meta.verbose_name))
+        return super().change_view(
             request, object_id, form_url=form_url, extra_context=extra_context
         )
 
     def changelist_view(self, request, extra_context=None):
         if not extra_context or 'title' not in extra_context:
             extra_context = extra_context or dict()
-            extra_context['title'] = force_text(self.model._meta.verbose_name_plural)
-        return super(AppendOnlyModelAdminMixin, self).changelist_view(
-            request, extra_context=extra_context
-        )
+            extra_context['title'] = title(force_text(self.model._meta.verbose_name))
+        return super().changelist_view(request, extra_context=extra_context)
 
     def add_view(self, request, form_url='', extra_context=None):
         extra_context = extra_context or dict()
         # Add tweaks to just display the save button
         extra_context.update(self._get_extra_for_mode(self.add_view_submit_mode))
-        return super(AppendOnlyModelAdminMixin, self).add_view(
-            request, form_url=form_url, extra_context=extra_context
-        )
+        return super().add_view(request, form_url=form_url, extra_context=extra_context)
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
@@ -92,13 +97,3 @@ class AppendOnlyModelAdminMixin(object):
             return self.readonly_fields + self.get_editable_fields(request, obj=obj)
         # This is an addition, no readonly to show
         return []
-
-
-class RemoveDeleteActionMixin(object):
-    def get_actions(self, request):
-        actions = super(RemoveDeleteActionMixin, self).get_actions(request)
-        try:
-            del actions['delete_selected']
-        except KeyError:
-            pass
-        return actions

@@ -41,9 +41,7 @@ class EmergencyContactInline(TextAreaToInputMixin, admin.TabularInline):
     can_delete = False
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
-        formfield = super(EmergencyContactInline, self).formfield_for_dbfield(
-            db_field, request, **kwargs
-        )
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
         if isinstance(db_field, TextField):
             formfield.widget.attrs.update(style='width: 90%;')
         return formfield
@@ -57,9 +55,7 @@ class ContactInfoInline(TextAreaToInputMixin, admin.TabularInline):
     can_delete = False
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
-        formfield = super(ContactInfoInline, self).formfield_for_dbfield(
-            db_field, request, **kwargs
-        )
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
         if isinstance(db_field, TextField):
             formfield.widget.attrs.update(style='width: 90%;')
         return formfield
@@ -92,7 +88,7 @@ class FamilyAdmin(TextAreaToInputMixin, RequiresInitModelAdmin, MaterialModelAdm
         return ['created_at']
 
     def get_queryset(self, request):
-        return super(FamilyAdmin, self).get_queryset(request).prefetch_related('family_members')
+        return super().get_queryset(request).prefetch_related('family_members')
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -150,7 +146,7 @@ class ParticipantAdmin(
             request.POST.setlist(helpers.ACTION_CHECKBOX_NAME, [1])
             request.POST._mutable = False
 
-        return super(ParticipantAdmin, self).changelist_view(request, extra_context=extra_context)
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 @register(models.Membership)

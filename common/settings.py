@@ -17,6 +17,7 @@ import environ
 import sentry_sdk
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.apps import AuthConfig
+from material.admin.apps import MaterialConfig
 from sentry_sdk.integrations.django import DjangoIntegration
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ env = environ.Env()
 # Site defaults
 AdminSite.site_title = 'Castellers of London'
 AdminSite.site_header = 'Castellers of London'
+MaterialConfig.default_site = 'apps.login.site.NoThemeMaterialAdminSite'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -125,6 +127,10 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries': {
+                'admin.admin_modify': 'templatetags.admin.admin_modify',
+                'admin.material': 'templatetags.admin.material',
+            },
             'debug': DEBUG,
         },
     },

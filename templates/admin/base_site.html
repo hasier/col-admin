@@ -24,7 +24,9 @@
         <a href="{{ site_url }}">{% trans 'View site' %}</a>
     {% endif %}
     {% endcomment %}
+    {% comment "CUSTOM - Disabled to hide extra themes" %}
     <a href="{% url 'admin:themes' %}">{% trans 'Themes' %}</a>
+    {% endcomment %}
     {% if user.is_active and user.is_staff %}
         {% url 'django-admindocs-docroot' as docsroot %}
         {% if docsroot %}

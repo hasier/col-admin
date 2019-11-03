@@ -15,7 +15,7 @@ class GeneralSetupForm(ModelForm):
             self.fields['time_unit_to_vote_since_membership'].label = ''
 
     def clean(self):
-        super(GeneralSetupForm, self).clean()
+        super().clean()
         errors = dict()
 
         if self.instance.pk:
@@ -41,7 +41,7 @@ class GeneralSetupForm(ModelForm):
 
 class ParticipantForm(ModelForm):
     def clean(self):
-        super(ParticipantForm, self).clean()
+        super().clean()
         errors = dict()
         self.instance.date_of_birth = self.cleaned_data['date_of_birth']
         if self.instance.is_under_aged:
@@ -83,7 +83,7 @@ class InlineMembershipForm(ModelForm):
                 self.fields['paid_on'].disabled = True
 
     def clean(self):
-        super(InlineMembershipForm, self).clean()
+        super().clean()
         errors = dict()
         if not self.cleaned_data['member_type'].is_usable_for(self.cleaned_data['effective_from']):
             errors['effective_from'] = 'The selected tier is not available for this period'

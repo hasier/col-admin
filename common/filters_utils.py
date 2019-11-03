@@ -12,7 +12,7 @@ class OnlyInputFilter(ABC, SimpleListFilter):
     disable_submit_on_filtered = False
 
     def __init__(self, *args, **kwargs):
-        super(OnlyInputFilter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def lookups(self, request, model_admin):
         return ((),)
