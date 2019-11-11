@@ -34,7 +34,7 @@
                 </div>
             </li>
             {% for app in available_apps %}
-                {% if app.app_label == 'membership' or app.app_label == 'auth' or is_membership_setup_initialized %}  {# CUSTOM if #}
+                {% if app.app_label == 'membership' or app.app_label == 'auth' or app.app_label == 'login' or is_membership_setup_initialized %}  {# CUSTOM if #}
                     <li class="scrollspy">
                         <div class="collapsible-header">
                             <i class="material-icons">{% if app.icon %}{{ app.icon }}{% else %}settings{% endif %}</i>
@@ -42,7 +42,7 @@
                         </div>
                         <div class="collapsible-body">
                             {% for model in app.models %}
-                                {% if app.app_label == 'membership' and model.object_name|lower == 'generalsetup' or app.app_label == 'auth' or is_membership_setup_initialized %}  {# CUSTOM if #}
+                                {% if app.app_label == 'membership' and model.object_name|lower == 'generalsetup' or app.app_label == 'auth' or app.app_label == 'login' or is_membership_setup_initialized %}  {# CUSTOM if #}
                                     {% if model.admin_url %}
                                         <div {% if model.admin_url in request.path %}class="active"{% endif %}>
                                             <a href="{{ model.admin_url }}">

@@ -1,3 +1,5 @@
+import sys
+
 from django.contrib import admin
 from django.contrib.admin import helpers
 from django.db.models.fields import TextField
@@ -22,7 +24,11 @@ from common.admin_utils import (
 
 class RequiresInitModelAdmin(admin.ModelAdmin):
     def get_urls(self):
-        if not membership.is_membership_setup_initialized():
+        command = sys.argv[1] if len(sys.argv) > 1 else None
+        if (
+            command not in ('makemigrations', 'migrate', None)
+            and not membership.is_membership_setup_initialized()
+        ):
             return []
         return super().get_urls()
 
