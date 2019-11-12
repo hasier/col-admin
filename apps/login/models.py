@@ -20,7 +20,7 @@ class User(AbstractUser):
 
     username = models.CharField(
         _('username'),
-        max_length=150,
+        max_length=254,
         unique=True,
         help_text=_('Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'),
         validators=[AbstractUser.username_validator],
