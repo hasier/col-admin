@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from material.admin.options import MaterialModelAdmin
 from material.admin.sites import site
 
-from apps.login import models
+from apps.users import models
 
 
 class UserCreationForm(forms.UserCreationForm):
@@ -17,6 +17,8 @@ class UserCreationForm(forms.UserCreationForm):
 
 
 class UserAdmin(MaterialModelAdmin, admin.UserAdmin):
+    icon_name = 'person'
+
     add_form = UserCreationForm
     fieldsets = (
         (None, {'fields': ('email', 'password')}),

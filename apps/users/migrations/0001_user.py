@@ -1,4 +1,4 @@
-import apps.login.models
+import apps.users.models
 import django.contrib.auth.validators
 from django.db import migrations, models
 import django.utils.timezone
@@ -105,6 +105,6 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={'db_table': 'auth_user',},
-            managers=[('objects', apps.login.models.UserManager()),],
+            managers=[('objects', apps.users.models.UserManager()),],
         ),
     ]

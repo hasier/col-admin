@@ -86,7 +86,7 @@ SENDGRID_SANDBOX_MODE_IN_DEBUG = True
 
 # Application definition
 INSTALLED_APPS = [
-    'apps.login.apps.LoginConfig',
+    'apps.users.apps.LoginConfig',
     'apps.membership.apps.MembershipConfig',
     'material.admin',
     'django.contrib.admin',
@@ -163,9 +163,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-AUTHENTICATION_BACKENDS = ['apps.login.auth_backends.EmailBackend']
+AUTHENTICATION_BACKENDS = ['apps.users.auth_backends.EmailBackend']
 
-AUTH_USER_MODEL = 'login.User'
+AUTH_USER_MODEL = 'users.User'
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
