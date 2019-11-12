@@ -5,12 +5,10 @@ from apps.membership.templatetags.membership import is_membership_setup_initiali
 
 
 def invalidate_general_setup(sender, **kwargs):
-    cls = type(sender)
-
-    delete_memoized(cls.get_last)
-    delete_memoized(cls.get_for_date)
-    delete_memoized(cls.get_current)
-    delete_memoized(cls.get_next)
+    delete_memoized(sender.get_last)
+    delete_memoized(sender.get_for_date)
+    delete_memoized(sender.get_current)
+    delete_memoized(sender.get_next)
     delete_memoized(is_membership_setup_initialized)
 
 
