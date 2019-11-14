@@ -23,14 +23,29 @@ from common.admin_utils import (
 
 
 class RequiresInitModelAdmin(admin.ModelAdmin):
-    def get_urls(self):
+    def _has_init_permission(self):
         command = sys.argv[1] if len(sys.argv) > 1 else None
         if (
             command not in ('makemigrations', 'migrate', None)
             and not membership.is_membership_setup_initialized()
         ):
-            return []
-        return super().get_urls()
+            return False
+        return True
+
+    def has_view_permission(self, request, obj=None):
+        return self._has_init_permission() and super().has_view_permission(request, obj=obj)
+
+    def has_module_permission(self, request):
+        return self._has_init_permission() and super().has_module_permission(request)
+
+    def has_add_permission(self, request):
+        return self._has_init_permission() and super().has_add_permission(request)
+
+    def has_change_permission(self, request, obj=None):
+        return self._has_init_permission() and super().has_change_permission(request, obj=obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return self._has_init_permission() and super().has_delete_permission(request, obj=obj)
 
 
 class HealthInfoInline(admin.TabularInline):
@@ -77,7 +92,7 @@ class MembershipInline(TextAreaToInputMixin, admin.TabularInline):
 
 
 @register(models.Family)
-class FamilyAdmin(TextAreaToInputMixin, RequiresInitModelAdmin, MaterialModelAdmin):
+class FamilyAdmin(RequiresInitModelAdmin, TextAreaToInputMixin, MaterialModelAdmin):
     icon_name = 'child_friendly'
 
     actions = None
@@ -117,7 +132,7 @@ generate_participant_table.short_description = "Generate participant PDF"
 
 @register(models.Participant)
 class ParticipantAdmin(
-    RemoveDeleteActionMixin, TextAreaToInputMixin, RequiresInitModelAdmin, MaterialModelAdmin
+    RequiresInitModelAdmin, RemoveDeleteActionMixin, TextAreaToInputMixin, MaterialModelAdmin
 ):
     icon_name = 'person_outline'
 
@@ -156,7 +171,7 @@ class ParticipantAdmin(
 
 
 @register(models.Membership)
-class MembershipAdmin(AppendOnlyModelAdminMixin, RequiresInitModelAdmin, MaterialModelAdmin):
+class MembershipAdmin(RequiresInitModelAdmin, AppendOnlyModelAdminMixin, MaterialModelAdmin):
     icon_name = 'card_membership'
 
     date_hierarchy = 'form_filled'
@@ -184,7 +199,7 @@ class MembershipAdmin(AppendOnlyModelAdminMixin, RequiresInitModelAdmin, Materia
 
 
 @register(models.Tier)
-class TierAdmin(TextAreaToInputMixin, RequiresInitModelAdmin, MaterialModelAdmin):
+class TierAdmin(RequiresInitModelAdmin, TextAreaToInputMixin, MaterialModelAdmin):
     icon_name = 'layers'
 
     area_to_input_field_names = ['name']
@@ -213,7 +228,7 @@ class TierAdmin(TextAreaToInputMixin, RequiresInitModelAdmin, MaterialModelAdmin
 
 
 @register(models.MemberType)
-class MemberTypeAdmin(TextAreaToInputMixin, RequiresInitModelAdmin, MaterialModelAdmin):
+class MemberTypeAdmin(RequiresInitModelAdmin, TextAreaToInputMixin, MaterialModelAdmin):
     icon_name = 'people_outline'
 
     area_to_input_field_names = ['type_name']
