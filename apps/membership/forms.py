@@ -71,7 +71,6 @@ class InlineMembershipForm(ModelForm):
         super().__init__(*args, **kwargs)
         if 'instance' in kwargs:
             for field_name in (
-                'member_type',
                 'participant',
                 'effective_from',
                 'form_filled',
@@ -85,7 +84,7 @@ class InlineMembershipForm(ModelForm):
     def clean(self):
         super().clean()
         errors = dict()
-        if not self.cleaned_data['member_type'].is_usable_for(self.cleaned_data['effective_from']):
+        if not self.cleaned_data['tier'].is_usable_for(self.cleaned_data['effective_from']):
             errors['effective_from'] = 'The selected tier is not available for this period'
 
         if errors:

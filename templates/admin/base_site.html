@@ -1,6 +1,15 @@
 {% extends "admin/base_site.html" %}
 {% load static i18n material %}
 
+{% block extrastyle %}
+{{ block.super }}
+<style type="text/css">
+    .errorlist {
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
 {% block branding %}
     <nav class="nav-extended">
         <div class="nav-wrapper">
@@ -42,4 +51,42 @@
         {% trans 'Log out' %}
         <i class="material-icons">exit_to_app</i>
     </a>
+{% endblock %}
+
+{% block footer %}
+    {% block datepickeroptions %}
+    <script>
+        var datepickerOptions = {
+            format: 'dd/mm/yyyy',
+            autoClose: false,
+            setDefaultDate: true,
+            showClearBtn: true,
+            i18n: {
+                cancel: '{% trans 'Cancel' %}',
+                clear: '{% trans 'Clear' %}',
+                done: '{% trans 'Ok' %}'
+            },
+            yearRange: 100,
+            firstDay: 1
+        };
+        var timeOptions = {
+            twelveHour: false,
+            autoClose: false,
+            showClearBtn: true,
+            i18n: {
+                cancel: '{% trans 'Cancel' %}',
+                clear: '{% trans 'Clear' %}',
+                done: '{% trans 'Ok' %}'
+            }
+        };
+    </script>
+    {% endblock %}
+
+    <script src="{% static 'material/admin/js/materialize.min.js' %}"></script>
+    <script src="{% static 'material/admin/js/materialize-init.min.js' %}"></script>
+    <script src="{% static 'material/admin/js/admin.js' %}"></script>
+    <script src="{% static 'material/admin/js/filters.js' %}"></script>
+    <script src="{% static 'material/admin/js/tray.js' %}"></script>
+    <script type="text/javascript" src="{% static 'material/admin/js/jquery.mousewheel.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'material/admin/js/jquery.jscrollpane.min.js' %}"></script>
 {% endblock %}

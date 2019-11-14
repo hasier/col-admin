@@ -167,9 +167,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('height', models.PositiveIntegerField(blank=True, null=True)),
+                ('height', models.PositiveIntegerField()),
                 ('weight', models.PositiveIntegerField(blank=True, null=True)),
-                ('info', models.TextField()),
+                ('info', models.TextField(blank=True, null=True)),
                 (
                     'participant',
                     models.ForeignKey(

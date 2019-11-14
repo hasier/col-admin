@@ -20,6 +20,7 @@ from common.admin_utils import (
     TextAreaToInputMixin,
     ViewColumnMixin,
 )
+from contrib.material.admin.options import MaterialTabularInline
 
 
 class RequiresInitModelAdmin(admin.ModelAdmin):
@@ -48,13 +49,13 @@ class RequiresInitModelAdmin(admin.ModelAdmin):
         return self._has_init_permission() and super().has_delete_permission(request, obj=obj)
 
 
-class HealthInfoInline(admin.TabularInline):
+class HealthInfoInline(MaterialTabularInline):
     model = models.HealthInfo
     extra = 1
     can_delete = False
 
 
-class EmergencyContactInline(TextAreaToInputMixin, admin.TabularInline):
+class EmergencyContactInline(TextAreaToInputMixin, MaterialTabularInline):
     model = models.EmergencyContact
     formset = RequiredOnceInlineFormSet
     area_to_input_field_names = ['full_name', 'phone', 'relation']
@@ -68,7 +69,7 @@ class EmergencyContactInline(TextAreaToInputMixin, admin.TabularInline):
         return formfield
 
 
-class ContactInfoInline(TextAreaToInputMixin, admin.TabularInline):
+class ContactInfoInline(TextAreaToInputMixin, MaterialTabularInline):
     model = models.ContactInfo
     formset = ContactInfoInlineFormset
     area_to_input_field_names = ['postcode', 'phone']
@@ -82,7 +83,7 @@ class ContactInfoInline(TextAreaToInputMixin, admin.TabularInline):
         return formfield
 
 
-class MembershipInline(TextAreaToInputMixin, admin.TabularInline):
+class MembershipInline(TextAreaToInputMixin, MaterialTabularInline):
     model = models.Membership
     form = InlineMembershipForm
     exclude = ['is_renewal', 'effective_until']
@@ -140,10 +141,16 @@ class ParticipantAdmin(
     form = ParticipantForm
     area_to_input_field_names = ['name', 'surname']
     list_filter = [EligibleForVoteParticipantFilter, RequiresAttentionFilter]
-    inlines = [ContactInfoInline, HealthInfoInline, EmergencyContactInline, MembershipInline]
+    inlines = [ContactInfoInline, EmergencyContactInline, HealthInfoInline, MembershipInline]
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    def get_inline_instances(self, request, obj=None):
+        inlines = super().get_inline_instances(request, obj=obj)
+        if not obj:
+            return [inline for inline in inlines if not isinstance(inline, MembershipInline)]
+        return inlines
 
     def changelist_view(self, request, extra_context=None):
         try:
@@ -284,6 +291,12 @@ class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModelAdminMixin, MaterialMode
 
     def get_ordering(self, request):
         return ['-created_at']
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser
 
     def has_add_permission(self, request):
         return request.user.is_superuser

@@ -51,9 +51,13 @@ class GeneralSetup(Loggable, models.Model):
     def get_next_renewal(self, from_date):
         dtstart = datetime(from_date.year, from_date.month, 1)
         next_setup = self.get_next(self.valid_from)
+        if dtstart.month == self.renewal_month:
+            index = 1
+        else:
+            index = 0
         return min(
             next_setup.valid_from if next_setup else date.max,
-            rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0].date(),
+            rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=2)[index].date(),
         )
 
 
@@ -82,10 +86,10 @@ class Participant(Loggable, models.Model):
 
     @property
     def is_under_aged(self):
-        return self.age >= 18
+        return self.age < 18
 
     def __str__(self):
-        return '{} {}'.format(self.name, self.surname)
+        return f'{self.name} {self.surname}'
 
 
 class ContactInfo(Loggable, models.Model):
@@ -102,9 +106,9 @@ class HealthInfo(Loggable, models.Model):
     participant = models.ForeignKey(
         Participant, on_delete=models.PROTECT, related_name='health_info'
     )
-    height = models.PositiveIntegerField(null=True, blank=True)
+    height = models.PositiveIntegerField()
     weight = models.PositiveIntegerField(null=True, blank=True)
-    info = models.TextField()
+    info = models.TextField(null=True, blank=True)
 
 
 class EmergencyContact(Loggable, models.Model):
@@ -142,7 +146,7 @@ class Tier(Loggable, models.Model):
         )
 
     def __str__(self):
-        return '{} ({} - {})'.format(self.name, self.usable_from, self.usable_until or '')
+        return '{} ({} - {})'.format(self.name, self.usable_from, self.usable_until or 'forever')
 
 
 class Membership(Loggable, models.Model):
@@ -187,8 +191,13 @@ class Membership(Loggable, models.Model):
             delta = get_timedelta_from_unit(
                 setup.time_to_vote_since_membership, setup.time_unit_to_vote_since_membership
             )
+
             # If the renewing member stopped being member for longer than that, it is not a renewal
-            self.is_renewal = last_membership.is_active_on(self.effective_from - delta)
+            effective_from = self.effective_from - delta
+            if effective_from < last_membership.effective_from < self.effective_from:
+                effective_from = last_membership.effective_from
+
+            self.is_renewal = last_membership.is_active_on(effective_from)
 
         if self.effective_from and not self.effective_until:
             self.effective_until = GeneralSetup.get_for_date(self.effective_from).get_next_renewal(

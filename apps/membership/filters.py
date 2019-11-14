@@ -58,8 +58,8 @@ class EligibleForVoteParticipantFilter(OnlyInputFilter):
                             output_field=DateField(),
                         ),
                     ),
-                    reference_date__lte=F('min_age') + F('date_of_birth'),
-                    memberships__member_type__tier__can_vote=True,
+                    reference_date__gte=F('min_age') + F('date_of_birth'),
+                    memberships__tier__can_vote=True,
                 )
             )
             .order_by('id', '-memberships__effective_from')
