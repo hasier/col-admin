@@ -8,7 +8,6 @@ from django.utils.dates import MONTHS
 from memoize import memoize
 
 from apps.membership.constants import PaymentMethod, TimeUnit
-from apps.membership.utils import get_timedelta_from_unit
 from common.model_utils import Loggable
 
 
@@ -88,8 +87,12 @@ class Participant(Loggable, models.Model):
     def is_under_aged(self):
         return self.age < 18
 
-    def __str__(self):
+    @property
+    def full_name(self):
         return f'{self.name} {self.surname}'
+
+    def __str__(self):
+        return self.full_name
 
 
 class ContactInfo(Loggable, models.Model):
@@ -150,18 +153,22 @@ class Tier(Loggable, models.Model):
 
 
 class Membership(Loggable, models.Model):
-    tier = models.ForeignKey(Tier, on_delete=models.PROTECT, related_name='memberships')
     participant = models.ForeignKey(
         Participant, on_delete=models.PROTECT, related_name='memberships'
     )
+    tier = models.ForeignKey(Tier, on_delete=models.PROTECT, related_name='memberships')
     effective_from = models.DateField()
     effective_until = models.DateField(null=True, blank=True)
     form_filled = models.DateField()
     paid_on = models.DateField(null=True, blank=True)
-    amount_paid = models.PositiveIntegerField()
-    payment_method = models.TextField(choices=PaymentMethod.choices())
-    is_renewal = models.BooleanField()
+    renewed_membership = models.ForeignKey(
+        'Membership', null=True, on_delete=models.PROTECT, related_name='grouped_memberships'
+    )
     notes = models.TextField(null=True, blank=True)
+
+    @property
+    def amount_paid(self):
+        return sum(payment.amount_paid for payment in self.payments.all())
 
     def is_active_on(self, on_date):
         if isinstance(on_date, datetime):
@@ -184,20 +191,12 @@ class Membership(Loggable, models.Model):
                 .order_by('-effective_from')
             )[0]
         except IndexError:
-            self.is_renewal = False
+            pass
         else:
-            # A new membership can only vote after time_to_vote_since_membership
-            setup = GeneralSetup.get_for_date(self.effective_from)
-            delta = get_timedelta_from_unit(
-                setup.time_to_vote_since_membership, setup.time_unit_to_vote_since_membership
-            )
-
-            # If the renewing member stopped being member for longer than that, it is not a renewal
-            effective_from = self.effective_from - delta
-            if effective_from < last_membership.effective_from < self.effective_from:
-                effective_from = last_membership.effective_from
-
-            self.is_renewal = last_membership.is_active_on(effective_from)
+            # If the renewal stopped being member for longer than a month, it is not a renewal
+            effective_from = self.effective_from - relativedelta(months=1)
+            if last_membership.is_active_on(effective_from):
+                self.renewed_membership = last_membership.renewed_membership or last_membership
 
         if self.effective_from and not self.effective_until:
             self.effective_until = GeneralSetup.get_for_date(self.effective_from).get_next_renewal(
@@ -210,3 +209,23 @@ class Membership(Loggable, models.Model):
             using=using,
             update_fields=update_fields,
         )
+
+
+class MembershipPayment(models.Model):
+    membership = models.ForeignKey(Membership, on_delete=models.PROTECT, related_name='payments')
+    amount_paid = models.PositiveIntegerField()
+    payment_method = models.TextField(choices=PaymentMethod.choices())
+
+
+class MembershipPeriod(models.Model):
+    participant = models.ForeignKey(
+        Participant, on_delete=models.PROTECT, related_name='membership_periods'
+    )
+    membership = models.ForeignKey(
+        Membership, on_delete=models.PROTECT, related_name='membership_periods'
+    )
+    effective_from = models.DateField()
+    effective_until = models.DateField()
+
+    class Meta:
+        managed = False

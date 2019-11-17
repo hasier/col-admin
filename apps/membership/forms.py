@@ -1,12 +1,12 @@
 from datetime import datetime, timezone
 
 from django.core.exceptions import ValidationError
-from django.forms import ModelForm
+from django import forms
 
 from apps.membership import models
 
 
-class GeneralSetupForm(ModelForm):
+class GeneralSetupForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -39,7 +39,7 @@ class GeneralSetupForm(ModelForm):
         return self.cleaned_data
 
 
-class ParticipantForm(ModelForm):
+class ParticipantForm(forms.ModelForm):
     def clean(self):
         super().clean()
         errors = dict()
@@ -66,21 +66,7 @@ class ParticipantForm(ModelForm):
         return self.cleaned_data
 
 
-class InlineMembershipForm(ModelForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if 'instance' in kwargs:
-            for field_name in (
-                'participant',
-                'effective_from',
-                'form_filled',
-                'amount_paid',
-                'payment_method',
-            ):
-                self.fields[field_name].disabled = True
-            if kwargs['instance'].paid_on:
-                self.fields['paid_on'].disabled = True
-
+class MembershipForm(forms.ModelForm):
     def clean(self):
         super().clean()
         errors = dict()
@@ -91,3 +77,7 @@ class InlineMembershipForm(ModelForm):
             raise ValidationError(errors)
 
         return self.cleaned_data
+
+
+class AddMembershipForm(forms.Form):
+    participant = forms.ModelChoiceField(queryset=models.Participant.objects.all(), required=True)

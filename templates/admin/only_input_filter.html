@@ -1,30 +1,35 @@
 {% load i18n %}
 
 <h3>{% blocktrans with filter_title=title %} By {{ filter_title }} {% endblocktrans %}</h3>
-<ul style="padding: 0 0 0 15px;">
+<ul style="padding: 0 0 10px 15px;">
     <li>
         {% with choices.0 as all_choice %}
-            <form method="GET" action="">
+            <form method="GET" action="" id="{{ spec.parameter_name }}-form">
                 <div style="{% for k, v in all_choice.block_attrs.items %}{{ k }}: {{ v }};{% endfor %}">
 
-                {% for k, v in all_choice.query_parts %}
-                    <input type="hidden" name="{{ k }}" value="{{ v }}"/>
-                {% endfor %}
+                    {% for k, v in all_choice.query_parts %}
+                        <input type="hidden" name="{{ k }}" value="{{ v }}"/>
+                    {% endfor %}
 
-                {% block content %}{% endblock %}
+                    {% block content %}{% endblock %}
 
-                <div style="display: flex; flex-direction: row; justify-content: flex-end;">
-                {% if not all_choice.selected %}
-                    <strong style="margin: 3px;"><a href="{{ all_choice.query_string }}"><i class="material-icons">clear</i>{% trans 'Remove' %}</a></strong>
-                {% endif %}
+                    <div style="display: flex; flex-direction: row; justify-content: flex-end;">
+                        {% if not all_choice.selected %}
+                            <strong style="margin: 8px;"><a href="{{ all_choice.query_string }}"><i
+                                    class="material-icons">clear</i>{% trans 'Remove' %}</a></strong>
+                        {% endif %}
 
-                <input class="default waves-effect waves-light btn btn-small" style="margin: 3px;" type="submit" value="{% trans 'Filter' %}"
-                   {% if not all_choice.selected and all_choice.disable_submit_on_filtered %}disabled{% endif %}
-                >
+                        <button form="{{ spec.parameter_name }}-form"
+                                type="submit"
+                                class="default waves-effect waves-light btn right"
+                                style="margin-top: 5px;"
+                                {% if not all_choice.selected and all_choice.disable_submit_on_filtered %}disabled{% endif %}>
+                            {% trans 'Filter' %}
+                            <i class="material-icons right">filter_list</i>
+                        </button>
+                    </div>
+
                 </div>
-
-                </div>
-
             </form>
         {% endwith %}
     </li>

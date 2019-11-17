@@ -1,0 +1,43 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}{% trans 'Add' %} Membership{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+        &rsaquo; <a href="{% url 'admin:app_list' app_label='membership' %}">Membership</a>
+        &rsaquo; Memberships
+        &rsaquo; Add Membership
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div id="content-main">
+        <form action="" id="select_participant" method="post" class="change-form" style="width: 100%;">
+            {% csrf_token %}
+            <div>
+                <div class="module indent">
+                    <fieldset class="module aligned">
+                        <div class="form-row{% if form.participant.errors %} errors{% endif %} field-{{ form.participant.name }}">
+                            {{ form.participant.errors }}
+                            <div class="input-field">
+                                {{ form.participant.label_tag }}
+                                <div class="related-wrapper" style="margin-top: 50px;">
+                                    {{ form.participant }}
+                                    {% if form.participant.help_text %}
+                                        <div class="help">{{ form.participant.help_text|safe }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <button form="select_participant" type="submit" class="default waves-effect waves-light btn right">
+                            {% trans 'Continue' %}
+                            <i class="material-icons right">navigate_next</i>
+                        </button>
+                    </fieldset>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

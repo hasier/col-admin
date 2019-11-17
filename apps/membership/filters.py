@@ -44,25 +44,18 @@ class EligibleForVoteParticipantFilter(OnlyInputFilter):
                     ),
                 ).filter(
                     reference_date__range=(
-                        Case(
-                            When(
-                                memberships__is_renewal=True,
-                                then=F('memberships__effective_from'),
-                            ),
-                            default=F('memberships__effective_from') + F('vote_interval'),
-                            output_field=DateField(),
-                        ),
+                        F('membership_periods__effective_from') + F('vote_interval'),
                         Coalesce(
-                            'memberships__effective_until',
+                            'membership_periods__effective_until',
                             Value(date.max, output_field=DateField()),
                             output_field=DateField(),
                         ),
                     ),
                     reference_date__gte=F('min_age') + F('date_of_birth'),
-                    memberships__tier__can_vote=True,
+                    membership_periods__membership__tier__can_vote=True,
                 )
             )
-            .order_by('id', '-memberships__effective_from')
+            .order_by('id', '-membership_periods__effective_from')
             .distinct('id')
         )
 
