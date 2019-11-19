@@ -172,6 +172,13 @@ class ParticipantAdmin(
         return super().changelist_view(request, extra_context=extra_context)
 
 
+class MembershipPaymentInline(MaterialTabularInline):
+    model = models.MembershipPayment
+    formset = RequiredOnceInlineFormSet
+    extra = 1
+    can_delete = False
+
+
 @register(models.Membership)
 class MembershipAdmin(RequiresInitModelAdmin, AppendOnlyModelAdminMixin, MaterialModelAdmin):
     icon_name = 'card_membership'
@@ -191,6 +198,7 @@ class MembershipAdmin(RequiresInitModelAdmin, AppendOnlyModelAdminMixin, Materia
         'effective_from',
         'effective_until',
     ]
+    inlines = [MembershipPaymentInline]
     area_to_input_field_names = ['notes']
     change_view_submit_mode = AppendOnlyModelAdminMixin.JUST_SAVE_MODE
 

@@ -70,7 +70,9 @@ class MembershipForm(forms.ModelForm):
     def clean(self):
         super().clean()
         errors = dict()
-        if not self.cleaned_data['tier'].is_usable_for(self.cleaned_data['effective_from']):
+        if 'tier' in self.cleaned_data and not self.cleaned_data['tier'].is_usable_for(
+            self.cleaned_data['effective_from']
+        ):
             errors['effective_from'] = 'The selected tier is not available for this period'
 
         if errors:

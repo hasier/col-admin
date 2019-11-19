@@ -6,7 +6,7 @@ from contrib.enum import ChoiceEnumMixin
 class PaymentMethod(ChoiceEnumMixin, enum.Enum):
     PAYMENT_METHOD_CASH = 'Cash'
     PAYMENT_METHOD_TRANSFER = 'Bank transfer'
-    PAYMENT_METHOD_SUMUP = 'SumUp'
+    PAYMENT_METHOD_CARD = 'Card'
 
 
 class TimeUnit(ChoiceEnumMixin, enum.Enum):
