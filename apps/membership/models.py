@@ -175,9 +175,7 @@ class Tier(Loggable, models.Model):
     def is_usable_for(self, ref_date):
         if isinstance(ref_date, datetime):
             ref_date = ref_date.date()
-        return self.usable_from <= ref_date and (
-            self.usable_until is None or self.usable_until > ref_date
-        )
+        return self.usable_from <= ref_date < (self.usable_until or date.max)
 
     def __str__(self):
         return '{} ({} - {})'.format(self.name, self.usable_from, self.usable_until or 'forever')
@@ -215,24 +213,25 @@ class Membership(Loggable, models.Model):
         return '{} membership for {}'.format(self.effective_from, self.participant)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        try:
-            last_membership = (
-                type(self)
-                .objects.filter(participant_id=self.participant_id)
-                .order_by('-effective_from')
-            )[0]
-        except IndexError:
-            pass
-        else:
-            # If the renewal stopped being member for longer than a month, it is not a renewal
-            effective_from = self.effective_from - relativedelta(months=1)
-            if last_membership.is_active_on(effective_from):
-                self.renewed_membership = last_membership.renewed_membership or last_membership
-
         if self.effective_from and not self.effective_until:
-            self.effective_until = GeneralSetup.get_for_date(self.effective_from).get_next_renewal(
-                self.effective_from
-            )
+            try:
+                last_membership = (
+                    type(self)
+                    .objects.filter(participant_id=self.participant_id)
+                    .order_by('-effective_from')
+                )[0]
+            except IndexError:
+                pass
+            else:
+                # If the renewal stopped being member for longer than a month, it is not a renewal
+                effective_from = self.effective_from - relativedelta(months=1)
+                if last_membership.is_active_on(effective_from):
+                    self.renewed_membership = last_membership.renewed_membership or last_membership
+
+            if self.tier.needs_renewal:
+                self.effective_until = GeneralSetup.get_for_date(
+                    self.effective_from
+                ).get_next_renewal(self.effective_from)
 
         super(Membership, self).save(
             force_insert=force_insert,

@@ -19,6 +19,12 @@ def clear_memoize():
     models.GeneralSetup.get_previous.delete_memoized()
 
 
+class RequiresGeneralSetup:
+    @pytest.fixture(autouse=True)
+    def general_setup(self):
+        factories.GeneralSetupFactory()
+
+
 class TestGeneralSetup:
     def test_get_last_empty(self):
         assert models.GeneralSetup.get_last() is None
@@ -152,7 +158,7 @@ class TestGeneralSetup:
         assert setup.get_next_renewal(datetime(2019, 12, 1)) == expected_date
 
 
-class TestParticipant:
+class TestParticipant(RequiresGeneralSetup):
     @pytest.mark.parametrize(
         ['date_of_birth', 'age', 'is_under_aged'],
         [
@@ -169,7 +175,7 @@ class TestParticipant:
         assert participant.is_under_aged is is_under_aged
 
 
-class TestTier:
+class TestTier(RequiresGeneralSetup):
     @pytest.mark.parametrize(
         ['usable_from', 'usable_until', 'expected_result'],
         [
@@ -189,3 +195,58 @@ class TestTier:
     def test_is_usable_for(self, usable_from, usable_until, expected_result):
         tier = factories.TierFactory(usable_from=usable_from, usable_until=usable_until)
         assert tier.is_usable_for(datetime(2019, 11, 1)) is expected_result
+
+
+class TestMembership(RequiresGeneralSetup):
+    @pytest.mark.parametrize(['amounts', 'expected'], [([5, 7], 12), ([5, 7, 12], 24), ([10], 10)])
+    def test_amount_paid(self, amounts, expected):
+        membership = factories.MembershipFactory()
+        for amount in amounts:
+            factories.MembershipPaymentFactory(membership=membership, amount_paid=amount)
+
+        assert membership.amount_paid == expected
+
+    @pytest.mark.parametrize(
+        ['effective_from', 'effective_until', 'expected_result'],
+        [
+            # In range
+            (date(2019, 1, 1), None, True),
+            (date(2019, 1, 1), date(2020, 1, 1), True),
+            (date(2019, 11, 1), None, True),
+            (date(2019, 11, 1), date(2020, 11, 1), True),
+            # Future
+            (date(2020, 1, 1), None, False),
+            (date(2020, 1, 1), date(2020, 11, 1), False),
+            # Past
+            (date(2018, 1, 1), date(2019, 10, 1), False),
+            (date(2018, 1, 1), date(2019, 11, 1), False),
+        ],
+    )
+    def test_is_active_on(self, effective_from, effective_until, expected_result):
+        membership = factories.MembershipFactory(
+            effective_from=effective_from, effective_until=effective_until
+        )
+        assert membership.is_active_on(datetime(2019, 11, 1)) is expected_result
+
+    @pytest.mark.parametrize(
+        ['effective_from', 'effective_until', 'expected_result'],
+        [
+            # In range
+            (date(2019, 1, 1), None, True),
+            (date(2019, 1, 1), date(2020, 1, 1), True),
+            (date(2019, 11, 1), None, True),
+            (date(2019, 11, 1), date(2020, 11, 1), True),
+            # Future
+            (date(2020, 1, 1), None, False),
+            (date(2020, 1, 1), date(2020, 11, 1), False),
+            # Past
+            (date(2018, 1, 1), date(2019, 10, 1), False),
+            (date(2018, 1, 1), date(2019, 11, 1), False),
+        ],
+    )
+    @freeze_time(time_to_freeze=datetime(2019, 11, 1))
+    def test_is_active(self, effective_from, effective_until, expected_result):
+        membership = factories.MembershipFactory(
+            effective_from=effective_from, effective_until=effective_until
+        )
+        assert membership.is_active is expected_result
