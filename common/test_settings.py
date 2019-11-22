@@ -6,9 +6,4 @@ if not DATABASES['default']:
         'Cannot start without a valid DB connection: {}'.format(DATABASES['default'])
     )
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": '',
-    }
-}
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": ''}}

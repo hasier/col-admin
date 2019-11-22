@@ -40,24 +40,53 @@ class GeneralSetup(Loggable, models.Model):
     def get_next(cls, date_from):
         return cls.objects.filter(valid_from__gt=date_from).order_by('valid_from').first()
 
-    def get_previous_renewal(self, from_date):
-        dtstart = datetime(from_date.year - 1, from_date.month, 1) + relativedelta(months=1)
-        return max(
-            self.valid_from,
-            rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=1)[0].date(),
-        )
+    @classmethod
+    @memoize(3600)
+    def get_previous(cls, date_from):
+        return cls.objects.filter(valid_from__lt=date_from).order_by('-valid_from').first()
 
-    def get_next_renewal(self, from_date):
+    def get_previous_renewal(self, from_date, min_date=None):
+        if min_date and self.valid_from > min_date:
+            return None
+
+        dtstart = datetime(from_date.year - 1, from_date.month, 1)
+
+        previous_renewal = rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=2)[
+            0
+        ].date()
+
+        previous_setup = self.get_previous(self.valid_from)
+        previous_min_date = None
+        if previous_setup:
+            previous_min_date = previous_setup.get_previous_renewal(
+                self.valid_from, min_date=previous_renewal
+            )
+
+        return max(previous_min_date or date(1900, 1, 1), previous_renewal)
+
+    def get_next_renewal(self, from_date, max_date=None):
+        if max_date and self.valid_from > max_date:
+            return None
+
         dtstart = datetime(from_date.year, from_date.month, 1)
-        next_setup = self.get_next(self.valid_from)
+
         if dtstart.month == self.renewal_month:
             index = 1
         else:
             index = 0
-        return min(
-            next_setup.valid_from if next_setup else date.max,
-            rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=2)[index].date(),
-        )
+
+        next_renewal = rrule(YEARLY, dtstart=dtstart, bymonth=self.renewal_month, count=2)[
+            index
+        ].date()
+
+        next_setup = self.get_next(self.valid_from)
+        next_max_date = None
+        if next_setup:
+            next_max_date = next_setup.get_next_renewal(
+                next_setup.valid_from, max_date=next_renewal
+            )
+
+        return min(next_max_date or date.max, next_renewal)
 
 
 class Family(Loggable, models.Model):

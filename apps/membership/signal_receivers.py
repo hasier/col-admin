@@ -9,6 +9,7 @@ def invalidate_general_setup(sender, **kwargs):
     delete_memoized(sender.get_for_date)
     delete_memoized(sender.get_current)
     delete_memoized(sender.get_next)
+    delete_memoized(sender.get_previous)
     delete_memoized(is_membership_setup_initialized)
 
 
