@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, date
 
 import pytest
+from freezegun import freeze_time
 
 from apps.membership import models
 from apps.membership.tests import factories
@@ -149,3 +150,20 @@ class TestGeneralSetup:
         setup = factories.GeneralSetupFactory(valid_from=date(2017, 1, 1), renewal_month=month)
         factories.GeneralSetupFactory(valid_from=date(2020, 6, 1), renewal_month=7)
         assert setup.get_next_renewal(datetime(2019, 12, 1)) == expected_date
+
+
+class TestParticipant:
+    @pytest.mark.parametrize(
+        ['date_of_birth', 'age', 'is_under_aged'],
+        [
+            (date(2001, 12, 1), 17, True),
+            (date(2001, 11, 1), 18, False),
+            (date(2002, 1, 1), 17, True),
+            (date(1991, 12, 1), 27, False),
+        ],
+    )
+    @freeze_time(time_to_freeze=datetime(2019, 11, 1))
+    def test_age(self, date_of_birth, age, is_under_aged):
+        participant = factories.ParticipantFactory(date_of_birth=date_of_birth)
+        assert participant.age == age
+        assert participant.is_under_aged is is_under_aged
