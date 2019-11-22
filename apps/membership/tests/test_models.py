@@ -167,3 +167,25 @@ class TestParticipant:
         participant = factories.ParticipantFactory(date_of_birth=date_of_birth)
         assert participant.age == age
         assert participant.is_under_aged is is_under_aged
+
+
+class TestTier:
+    @pytest.mark.parametrize(
+        ['usable_from', 'usable_until', 'expected_result'],
+        [
+            # In range
+            (date(2019, 1, 1), None, True),
+            (date(2019, 1, 1), date(2020, 1, 1), True),
+            (date(2019, 11, 1), None, True),
+            (date(2019, 11, 1), date(2020, 11, 1), True),
+            # Future
+            (date(2020, 1, 1), None, False),
+            (date(2020, 1, 1), date(2020, 11, 1), False),
+            # Past
+            (date(2018, 1, 1), date(2019, 10, 1), False),
+            (date(2018, 1, 1), date(2019, 11, 1), False),
+        ],
+    )
+    def test_is_usable_for(self, usable_from, usable_until, expected_result):
+        tier = factories.TierFactory(usable_from=usable_from, usable_until=usable_until)
+        assert tier.is_usable_for(datetime(2019, 11, 1)) is expected_result

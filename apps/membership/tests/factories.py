@@ -29,3 +29,22 @@ class ParticipantFactory(factory.DjangoModelFactory):
     participation_form_filled_on = fuzzy.FuzzyDateTime(
         start_dt=timezone.now() - timedelta(days=365)
     )
+
+
+class MemberTypeFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.MemberType
+
+    type_name = fuzzy.FuzzyText()
+
+
+class TierFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = models.Tier
+
+    name = fuzzy.FuzzyText()
+    usable_from = fuzzy.FuzzyDateTime(start_dt=timezone.now() - timedelta(days=30))
+    member_type = factory.SubFactory(MemberTypeFactory)
+    can_vote = True
+    needs_renewal = True
+    base_amount = fuzzy.FuzzyInteger(low=5)

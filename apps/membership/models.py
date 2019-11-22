@@ -173,8 +173,10 @@ class Tier(Loggable, models.Model):
     base_amount = models.PositiveIntegerField()
 
     def is_usable_for(self, ref_date):
+        if isinstance(ref_date, datetime):
+            ref_date = ref_date.date()
         return self.usable_from <= ref_date and (
-            self.usable_until is None or self.usable_until >= ref_date
+            self.usable_until is None or self.usable_until > ref_date
         )
 
     def __str__(self):
