@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, date
 
 import pytest
+from django.core.exceptions import ValidationError
 from freezegun import freeze_time
 
 from apps.membership import models
@@ -19,10 +20,15 @@ def clear_memoize():
     models.GeneralSetup.get_previous.delete_memoized()
 
 
+@pytest.fixture
+def usable_from():
+    return date(2019, 1, 1)
+
+
 class RequiresGeneralSetup:
     @pytest.fixture(autouse=True)
     def general_setup(self):
-        factories.GeneralSetupFactory()
+        return factories.GeneralSetupFactory(valid_from=date(2015, 1, 1), renewal_month=1)
 
 
 class TestGeneralSetup:
@@ -250,3 +256,78 @@ class TestMembership(RequiresGeneralSetup):
             effective_from=effective_from, effective_until=effective_until
         )
         assert membership.is_active is expected_result
+
+    @pytest.mark.parametrize(
+        ['renewing_tier', 'expected_until'], [(True, date(2020, 1, 1)), (False, None)]
+    )
+    def test_save_new(self, usable_from, renewing_tier, expected_until):
+        membership = models.Membership.objects.create(
+            participant=factories.ParticipantFactory(),
+            tier=factories.TierFactory(needs_renewal=renewing_tier, usable_from=usable_from),
+            effective_from=date(2019, 11, 1),
+            form_filled=date(2019, 11, 1),
+        )
+        assert membership.effective_until == expected_until
+        assert membership.renewed_membership is None
+
+    @pytest.mark.parametrize(
+        ['renewing_tier_previous', 'renewing_tier_new'],
+        [(True, True), (True, False), (False, True), (False, False)],
+    )
+    def test_save_existing(self, usable_from, renewing_tier_previous, renewing_tier_new):
+        participant = factories.ParticipantFactory()
+        previous_membership = factories.MembershipFactory(
+            participant=participant,
+            tier=factories.TierFactory(
+                needs_renewal=renewing_tier_previous, usable_from=usable_from - timedelta(days=30)
+            ),
+            effective_from=date(2019, 1, 1),
+        )
+        with pytest.raises(ValidationError) as exc:
+            models.Membership.objects.create(
+                participant=participant,
+                tier=factories.TierFactory(
+                    needs_renewal=renewing_tier_new, usable_from=usable_from
+                ),
+                effective_from=date(2019, 11, 1),
+                form_filled=date(2019, 11, 1),
+            )
+
+        err = exc.value
+        assert isinstance(err, ValidationError)
+        assert isinstance(err.error_dict.get('effective_from'), list)
+        assert err.message_dict['effective_from'][0] == (
+            'Cannot create a new membership until the previous one '
+            f'({previous_membership}) has been closed'
+        )
+
+    @pytest.mark.parametrize(
+        ['renewing_tier_previous', 'renewing_tier_new', 'expected_until'],
+        [
+            (True, True, date(2021, 1, 1)),
+            (True, False, None),
+            (False, True, date(2021, 1, 1)),
+            (False, False, None),
+        ],
+    )
+    def test_save_link_previous(
+        self, usable_from, renewing_tier_previous, renewing_tier_new, expected_until
+    ):
+        participant = factories.ParticipantFactory()
+        previous_membership = factories.MembershipFactory(
+            participant=participant,
+            tier=factories.TierFactory(
+                needs_renewal=renewing_tier_previous, usable_from=usable_from
+            ),
+            effective_from=date(2019, 1, 1),
+            effective_until=date(2020, 1, 1),
+        )
+        membership = models.Membership.objects.create(
+            participant=participant,
+            tier=factories.TierFactory(needs_renewal=renewing_tier_new, usable_from=usable_from),
+            effective_from=date(2020, 1, 1),
+            form_filled=date(2019, 11, 1),
+        )
+
+        assert membership.effective_until == expected_until
+        assert membership.renewed_membership == previous_membership

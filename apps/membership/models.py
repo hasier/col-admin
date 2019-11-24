@@ -2,6 +2,7 @@ from datetime import date, datetime
 
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import YEARLY, rrule
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.dates import MONTHS
@@ -223,6 +224,16 @@ class Membership(Loggable, models.Model):
             except IndexError:
                 pass
             else:
+                if last_membership.is_active_on(self.effective_from):
+                    raise ValidationError(
+                        dict(
+                            effective_from=[
+                                'Cannot create a new membership until the previous one '
+                                f'({last_membership}) has been closed'
+                            ]
+                        )
+                    )
+
                 # If the renewal stopped being member for longer than a month, it is not a renewal
                 effective_from = self.effective_from - relativedelta(months=1)
                 if last_membership.is_active_on(effective_from):
