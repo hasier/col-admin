@@ -1,7 +1,6 @@
 from datetime import datetime
 
-from django.contrib.admin.filters import SimpleListFilter
-from django.db.models import Case, DateField, Q, When
+from django.db.models import DateField, Q
 from django.db.models.expressions import DurationValue, F, Value
 from django.db.models.functions import Coalesce
 
@@ -52,7 +51,7 @@ class EligibleForVoteParticipantFilter(OnlyInputFilter):
                         ),
                     ),
                     reference_date__gte=F('min_age') + F('date_of_birth'),
-                    membership_periods__membership__tier__can_vote=True,
+                    membership_periods__can_vote=True,
                 )
             )
             .order_by('id', '-membership_periods__effective_from')

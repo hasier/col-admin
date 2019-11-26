@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, date
+from unittest import mock
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -301,6 +302,7 @@ class TestMembership(RequiresGeneralSetup):
             f'({previous_membership}) has been closed'
         )
 
+    @pytest.mark.parametrize('can_vote', [True, False])
     @pytest.mark.parametrize(
         ['renewing_tier_previous', 'renewing_tier_new', 'expected_until'],
         [
@@ -311,10 +313,51 @@ class TestMembership(RequiresGeneralSetup):
         ],
     )
     def test_save_link_previous(
-        self, usable_from, renewing_tier_previous, renewing_tier_new, expected_until
+        self, usable_from, renewing_tier_previous, renewing_tier_new, can_vote, expected_until
     ):
         participant = factories.ParticipantFactory()
         previous_membership = factories.MembershipFactory(
+            participant=participant,
+            tier=factories.TierFactory(
+                needs_renewal=renewing_tier_previous, can_vote=can_vote, usable_from=usable_from
+            ),
+            effective_from=date(2019, 1, 1),
+            effective_until=date(2020, 1, 1),
+        )
+        membership = models.Membership.objects.create(
+            participant=participant,
+            tier=factories.TierFactory(
+                needs_renewal=renewing_tier_new, can_vote=can_vote, usable_from=usable_from
+            ),
+            effective_from=date(2020, 1, 1),
+            form_filled=date(2019, 11, 1),
+        )
+
+        assert membership.effective_until == expected_until
+        assert membership.renewed_membership == previous_membership
+
+    @pytest.mark.parametrize(
+        'effective_from', [date(2020, 2, 1), date(2020, 2, 2), date(2020, 3, 1)]
+    )
+    @pytest.mark.parametrize(
+        ['renewing_tier_previous', 'renewing_tier_new', 'expected_until'],
+        [
+            (True, True, date(2021, 1, 1)),
+            (True, False, None),
+            (False, True, date(2021, 1, 1)),
+            (False, False, None),
+        ],
+    )
+    def test_save_gap_previous(
+        self,
+        usable_from,
+        renewing_tier_previous,
+        renewing_tier_new,
+        effective_from,
+        expected_until,
+    ):
+        participant = factories.ParticipantFactory()
+        factories.MembershipFactory(
             participant=participant,
             tier=factories.TierFactory(
                 needs_renewal=renewing_tier_previous, usable_from=usable_from
@@ -325,9 +368,136 @@ class TestMembership(RequiresGeneralSetup):
         membership = models.Membership.objects.create(
             participant=participant,
             tier=factories.TierFactory(needs_renewal=renewing_tier_new, usable_from=usable_from),
-            effective_from=date(2020, 1, 1),
-            form_filled=date(2019, 11, 1),
+            effective_from=effective_from,
+            form_filled=effective_from,
         )
 
         assert membership.effective_until == expected_until
-        assert membership.renewed_membership == previous_membership
+        assert membership.renewed_membership is None
+
+
+class TestMembershipPeriod(RequiresGeneralSetup):
+    def test_correct_grouping(self):
+        usable_from = date(2015, 1, 1)
+
+        tier_renewal_vote = factories.TierFactory(
+            needs_renewal=True, can_vote=True, usable_from=usable_from
+        )
+        tier_no_renewal_vote = factories.TierFactory(
+            needs_renewal=False, can_vote=True, usable_from=usable_from
+        )
+        tier_renewal_no_vote = factories.TierFactory(
+            needs_renewal=True, can_vote=False, usable_from=usable_from
+        )
+        tier_no_renewal_no_vote = factories.TierFactory(
+            needs_renewal=False, can_vote=False, usable_from=usable_from
+        )
+
+        participant1 = factories.ParticipantFactory()
+        membership = factories.MembershipFactory(
+            participant=participant1,
+            tier=tier_renewal_vote,
+            effective_from=date(2015, 1, 1),
+            effective_until=date(2016, 1, 1),
+            renewed_membership=None,
+        )
+        factories.MembershipFactory(
+            participant=participant1,
+            tier=tier_no_renewal_vote,
+            effective_from=date(2016, 1, 1),
+            effective_until=date(2017, 1, 1),
+            renewed_membership=membership,
+        )
+        membership = factories.MembershipFactory(
+            participant=participant1,
+            tier=tier_no_renewal_no_vote,
+            effective_from=date(2017, 1, 1),
+            effective_until=date(2018, 1, 1),
+            renewed_membership=None,
+        )
+        factories.MembershipFactory(
+            participant=participant1,
+            tier=tier_renewal_no_vote,
+            effective_from=date(2018, 1, 1),
+            effective_until=date(2019, 1, 1),
+            renewed_membership=membership,
+        )
+        factories.MembershipFactory(
+            participant=participant1,
+            tier=tier_renewal_vote,
+            effective_from=date(2019, 1, 1),
+            effective_until=date(2020, 1, 1),
+            renewed_membership=None,
+        )
+
+        participant2 = factories.ParticipantFactory()
+        factories.MembershipFactory(
+            participant=participant2,
+            tier=tier_renewal_vote,
+            effective_from=date(2015, 1, 1),
+            effective_until=date(2016, 1, 1),
+            renewed_membership=None,
+        )
+        membership = factories.MembershipFactory(
+            participant=participant2,
+            tier=tier_renewal_vote,
+            effective_from=date(2017, 1, 1),
+            effective_until=date(2018, 1, 1),
+            renewed_membership=None,
+        )
+        factories.MembershipFactory(
+            participant=participant2,
+            tier=tier_renewal_no_vote,
+            effective_from=date(2018, 1, 1),
+            effective_until=date(2019, 1, 1),
+            renewed_membership=membership,
+        )
+
+        assert list(
+            models.MembershipPeriod.objects.order_by(
+                'participant_id', 'effective_from', 'can_vote'
+            ).values()
+        ) == [
+            {
+                'id': mock.ANY,
+                'participant_id': participant1.pk,
+                'can_vote': True,
+                'effective_from': date(2015, 1, 1),
+                'effective_until': date(2017, 1, 1),
+            },
+            {
+                'id': mock.ANY,
+                'participant_id': participant1.pk,
+                'can_vote': False,
+                'effective_from': date(2017, 1, 1),
+                'effective_until': date(2019, 1, 1),
+            },
+            {
+                'id': mock.ANY,
+                'participant_id': participant1.pk,
+                'can_vote': True,
+                'effective_from': date(2019, 1, 1),
+                'effective_until': date(2020, 1, 1),
+            },
+            {
+                'id': mock.ANY,
+                'participant_id': participant2.pk,
+                'can_vote': True,
+                'effective_from': date(2015, 1, 1),
+                'effective_until': date(2016, 1, 1),
+            },
+            {
+                'id': mock.ANY,
+                'participant_id': participant2.pk,
+                'can_vote': True,
+                'effective_from': date(2017, 1, 1),
+                'effective_until': date(2018, 1, 1),
+            },
+            {
+                'id': mock.ANY,
+                'participant_id': participant2.pk,
+                'can_vote': False,
+                'effective_from': date(2018, 1, 1),
+                'effective_until': date(2019, 1, 1),
+            },
+        ]

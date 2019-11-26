@@ -28,8 +28,8 @@ class GeneralSetup(Loggable, models.Model):
 
     @classmethod
     @memoize(86400)
-    def get_for_date(cls, date):
-        return cls.objects.filter(valid_from__lte=date).order_by('-valid_from').first()
+    def get_for_date(cls, ref_date):
+        return cls.objects.filter(valid_from__lte=ref_date).order_by('-valid_from').first()
 
     @classmethod
     @memoize(3600)
@@ -236,7 +236,10 @@ class Membership(Loggable, models.Model):
 
                 # If the renewal stopped being member for longer than a month, it is not a renewal
                 effective_from = self.effective_from - relativedelta(months=1)
-                if last_membership.is_active_on(effective_from):
+                if (
+                    last_membership.is_active_on(effective_from)
+                    and last_membership.tier.can_vote == self.tier.can_vote
+                ):
                     self.renewed_membership = last_membership.renewed_membership or last_membership
 
             if self.tier.needs_renewal:
@@ -259,14 +262,14 @@ class MembershipPayment(models.Model):
 
 
 class MembershipPeriod(models.Model):
+    id = models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')
     participant = models.ForeignKey(
-        Participant, on_delete=models.PROTECT, related_name='membership_periods'
+        Participant, on_delete=models.DO_NOTHING, related_name='membership_periods'
     )
-    membership = models.ForeignKey(
-        Membership, on_delete=models.PROTECT, related_name='membership_periods'
-    )
+    can_vote = models.BooleanField()
     effective_from = models.DateField()
     effective_until = models.DateField()
 
     class Meta:
         managed = False
+        db_table = 'membership_membershipperiod'

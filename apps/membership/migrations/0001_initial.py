@@ -16,20 +16,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='MembershipPeriod',
-            fields=[
-                (
-                    'id',
-                    models.AutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name='ID'
-                    ),
-                ),
-                ('effective_from', models.DateField()),
-                ('effective_until', models.DateField()),
-            ],
-            options={'managed': False,},
-        ),
-        migrations.CreateModel(
             name='Family',
             fields=[
                 (
@@ -41,7 +27,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('family_name', models.TextField()),
             ],
-            options={'verbose_name_plural': 'families',},
+            options={'verbose_name_plural': 'families'},
         ),
         migrations.CreateModel(
             name='GeneralSetup',
@@ -67,7 +53,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={'abstract': False,},
+            options={'abstract': False},
         ),
         migrations.CreateModel(
             name='MemberType',
@@ -82,7 +68,7 @@ class Migration(migrations.Migration):
                 ('type_name', models.TextField()),
                 ('notes', models.TextField(blank=True, null=True)),
             ],
-            options={'abstract': False,},
+            options={'abstract': False},
         ),
         migrations.CreateModel(
             name='Tier',
@@ -109,7 +95,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={'abstract': False,},
+            options={'abstract': False},
         ),
         migrations.CreateModel(
             name='Participant',
@@ -136,7 +122,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={'abstract': False,},
+            options={'abstract': False},
         ),
         migrations.CreateModel(
             name='Membership',
@@ -156,10 +142,9 @@ class Migration(migrations.Migration):
                 (
                     'participant',
                     models.ForeignKey(
-                        null=True,
                         on_delete=django.db.models.deletion.PROTECT,
                         related_name='memberships',
-                        to='membership.Membership',
+                        to='membership.Participant',
                     ),
                 ),
                 (
@@ -171,7 +156,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={'abstract': False,},
+            options={'abstract': False},
         ),
         migrations.AddField(
             model_name='membership',
@@ -226,7 +211,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={'abstract': False,},
+            options={'abstract': False},
         ),
         migrations.CreateModel(
             name='EmergencyContact',
@@ -250,7 +235,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={'abstract': False,},
+            options={'abstract': False},
         ),
         migrations.CreateModel(
             name='ContactInfo',
@@ -275,7 +260,22 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={'abstract': False,},
+            options={'abstract': False},
+        ),
+        migrations.CreateModel(
+            name='MembershipPeriod',
+            fields=[
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name='ID'
+                    ),
+                ),
+                ('can_vote', models.BooleanField()),
+                ('effective_from', models.DateField()),
+                ('effective_until', models.DateField()),
+            ],
+            options={'db_table': 'membership_membershipperiod', 'managed': False},
         ),
         migrations.RunSQL(
             sql=[
@@ -283,13 +283,15 @@ class Migration(migrations.Migration):
                     '''CREATE OR REPLACE VIEW 
                        membership_membershipperiod AS
                        SELECT
-                           MIN(effective_from) AS effective_from, 
-                           MAX(COALESCE(effective_until, %(max_date)s)) AS effective_until,
+                           row_number() OVER (PARTITION BY TRUE) AS id,
+                           MIN(m.effective_from) AS effective_from, 
+                           MAX(COALESCE(m.effective_until, %(max_date)s)) AS effective_until,
                            -- participant_id should be consistent for the group anyway
-                           MAX(participant_id) AS participant_id,
-                           MAX(id) AS membership_id
-                       FROM membership_membership
-                       GROUP BY COALESCE(renewed_membership_id, id)''',
+                           MAX(m.participant_id) AS participant_id,
+                           t.can_vote AS can_vote
+                       FROM membership_membership AS m
+                           JOIN membership_tier AS t ON m.tier_id = t.id
+                       GROUP BY COALESCE(m.renewed_membership_id, m.id), t.can_vote''',
                     dict(max_date=date.max.isoformat()),
                 )
             ],
