@@ -1,4 +1,4 @@
-from typing import Tuple, Any, Generator, Iterable
+from typing import Any, Generator, Iterable, Tuple
 
 
 class ChoiceEnumMixin(object):

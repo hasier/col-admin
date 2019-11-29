@@ -1,11 +1,11 @@
-from datetime import timedelta, date
+from datetime import date, timedelta
 
 import factory
 from django.utils import timezone
 from factory import fuzzy
 
 from apps.membership import models
-from apps.membership.constants import TimeUnit, PaymentMethod
+from apps.membership.constants import PaymentMethod, TimeUnit
 
 
 class GeneralSetupFactory(factory.DjangoModelFactory):

@@ -7,23 +7,23 @@ from django.contrib.admin.options import get_content_type_for_model
 from django.db.models.fields import TextField
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from django.urls import reverse, path
-from material.admin.options import MaterialModelAdmin
+from django.urls import path, reverse
 from material.admin.decorators import register
+from material.admin.options import MaterialModelAdmin
 
 from apps.membership import forms, models
 from apps.membership.constants import TimeUnit
 from apps.membership.filters import EligibleForVoteParticipantFilter, RequiresAttentionFilter
-from apps.membership.forms import MembershipForm, ParticipantForm, AddMembershipForm
+from apps.membership.forms import AddMembershipForm, MembershipForm, ParticipantForm
 from apps.membership.formsets import ContactInfoInlineFormset
 from apps.membership.templatetags import membership
-from common.form_utils import RequiredOnceInlineFormSet
 from common.admin_utils import (
     AppendOnlyModelAdminMixin,
     RemoveDeleteActionMixin,
     TextAreaToInputMixin,
     ViewColumnMixin,
 )
+from common.form_utils import RequiredOnceInlineFormSet
 from contrib.material.admin.options import MaterialTabularInline
 
 
