@@ -191,7 +191,7 @@ class Membership(Loggable, models.Model):
     effective_until = models.DateField(null=True, blank=True)
     form_filled = models.DateField()
     paid_on = models.DateField(null=True, blank=True)
-    renewed_membership = models.ForeignKey(
+    group_first_membership = models.ForeignKey(
         'Membership', null=True, on_delete=models.PROTECT, related_name='grouped_memberships'
     )
     notes = models.TextField(null=True, blank=True)
@@ -240,7 +240,9 @@ class Membership(Loggable, models.Model):
                     last_membership.is_active_on(effective_from)
                     and last_membership.tier.can_vote == self.tier.can_vote
                 ):
-                    self.renewed_membership = last_membership.renewed_membership or last_membership
+                    self.group_first_membership = (
+                        last_membership.group_first_membership or last_membership
+                    )
 
             if self.tier.needs_renewal:
                 self.effective_until = GeneralSetup.get_for_date(

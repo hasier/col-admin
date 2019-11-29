@@ -191,7 +191,7 @@ class MembershipAdmin(RequiresInitModelAdmin, AppendOnlyModelAdminMixin, Materia
         'effective_until',
         'amount_paid',
     ]
-    exclude = ['renewed_membership']
+    exclude = ['group_first_membership']
     list_display = [
         'participant',
         'tier',

@@ -269,7 +269,7 @@ class TestMembership(RequiresGeneralSetup):
             form_filled=date(2019, 11, 1),
         )
         assert membership.effective_until == expected_until
-        assert membership.renewed_membership is None
+        assert membership.group_first_membership is None
 
     @pytest.mark.parametrize(
         ['renewing_tier_previous', 'renewing_tier_new'],
@@ -334,7 +334,7 @@ class TestMembership(RequiresGeneralSetup):
         )
 
         assert membership.effective_until == expected_until
-        assert membership.renewed_membership == previous_membership
+        assert membership.group_first_membership == previous_membership
 
     @pytest.mark.parametrize(
         'effective_from', [date(2020, 2, 1), date(2020, 2, 2), date(2020, 3, 1)]
@@ -373,7 +373,7 @@ class TestMembership(RequiresGeneralSetup):
         )
 
         assert membership.effective_until == expected_until
-        assert membership.renewed_membership is None
+        assert membership.group_first_membership is None
 
 
 class TestMembershipPeriod(RequiresGeneralSetup):
@@ -399,35 +399,35 @@ class TestMembershipPeriod(RequiresGeneralSetup):
             tier=tier_renewal_vote,
             effective_from=date(2015, 1, 1),
             effective_until=date(2016, 1, 1),
-            renewed_membership=None,
+            group_first_membership=None,
         )
         factories.MembershipFactory(
             participant=participant1,
             tier=tier_no_renewal_vote,
             effective_from=date(2016, 1, 1),
             effective_until=date(2017, 1, 1),
-            renewed_membership=membership,
+            group_first_membership=membership,
         )
         membership = factories.MembershipFactory(
             participant=participant1,
             tier=tier_no_renewal_no_vote,
             effective_from=date(2017, 1, 1),
             effective_until=date(2018, 1, 1),
-            renewed_membership=None,
+            group_first_membership=None,
         )
         factories.MembershipFactory(
             participant=participant1,
             tier=tier_renewal_no_vote,
             effective_from=date(2018, 1, 1),
             effective_until=date(2019, 1, 1),
-            renewed_membership=membership,
+            group_first_membership=membership,
         )
         factories.MembershipFactory(
             participant=participant1,
             tier=tier_renewal_vote,
             effective_from=date(2019, 1, 1),
             effective_until=date(2020, 1, 1),
-            renewed_membership=None,
+            group_first_membership=None,
         )
 
         participant2 = factories.ParticipantFactory()
@@ -436,21 +436,21 @@ class TestMembershipPeriod(RequiresGeneralSetup):
             tier=tier_renewal_vote,
             effective_from=date(2015, 1, 1),
             effective_until=date(2016, 1, 1),
-            renewed_membership=None,
+            group_first_membership=None,
         )
         membership = factories.MembershipFactory(
             participant=participant2,
             tier=tier_renewal_vote,
             effective_from=date(2017, 1, 1),
             effective_until=date(2018, 1, 1),
-            renewed_membership=None,
+            group_first_membership=None,
         )
         factories.MembershipFactory(
             participant=participant2,
             tier=tier_renewal_no_vote,
             effective_from=date(2018, 1, 1),
             effective_until=date(2019, 1, 1),
-            renewed_membership=membership,
+            group_first_membership=membership,
         )
 
         assert list(

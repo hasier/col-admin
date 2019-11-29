@@ -160,7 +160,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='membership',
-            name='renewed_membership',
+            name='group_first_membership',
             field=models.ForeignKey(
                 null=True,
                 on_delete=django.db.models.deletion.PROTECT,
@@ -291,7 +291,7 @@ class Migration(migrations.Migration):
                            t.can_vote AS can_vote
                        FROM membership_membership AS m
                            JOIN membership_tier AS t ON m.tier_id = t.id
-                       GROUP BY COALESCE(m.renewed_membership_id, m.id), t.can_vote''',
+                       GROUP BY COALESCE(m.group_first_membership_id, m.id), t.can_vote''',
                     dict(max_date=date.max.isoformat()),
                 )
             ],
