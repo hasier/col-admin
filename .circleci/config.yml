@@ -1,0 +1,38 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.6
+
+      - image: circleci/postgres:11
+        environment:
+          POSTGRES_DB: col-admin
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ""
+
+    working_directory: ~/col-admin
+
+    steps:
+      - checkout
+
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt -r requirements-dev.txt
+
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            pytest
+          environment:
+            DJANGO_SETTINGS_MODULE: common.test_settings
+            DATABASE_URL: postgres://postgres:@127.0.0.1:5432/col-admin
+            TEST_DATABASE_URL: postgres://postgres:@127.0.0.1:5432/col-admin
+            REDISCLOUD_URL:
