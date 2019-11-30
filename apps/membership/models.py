@@ -236,10 +236,7 @@ class Membership(Loggable, models.Model):
 
                 # If the renewal stopped being member for longer than a month, it is not a renewal
                 effective_from = self.effective_from - relativedelta(months=1)
-                if (
-                    last_membership.is_active_on(effective_from)
-                    and last_membership.tier.can_vote == self.tier.can_vote
-                ):
+                if last_membership.is_active_on(effective_from):
                     self.group_first_membership = (
                         last_membership.group_first_membership or last_membership
                     )
@@ -268,7 +265,6 @@ class MembershipPeriod(models.Model):
     participant = models.ForeignKey(
         Participant, on_delete=models.DO_NOTHING, related_name='membership_periods'
     )
-    can_vote = models.BooleanField()
     effective_from = models.DateField()
     effective_until = models.DateField()
 

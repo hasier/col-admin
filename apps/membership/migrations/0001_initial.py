@@ -287,11 +287,10 @@ class Migration(migrations.Migration):
                            MIN(m.effective_from) AS effective_from, 
                            MAX(COALESCE(m.effective_until, %(max_date)s)) AS effective_until,
                            -- participant_id should be consistent for the group anyway
-                           MAX(m.participant_id) AS participant_id,
-                           t.can_vote AS can_vote
+                           MAX(m.participant_id) AS participant_id
                        FROM membership_membership AS m
                            JOIN membership_tier AS t ON m.tier_id = t.id
-                       GROUP BY COALESCE(m.group_first_membership_id, m.id), t.can_vote''',
+                       GROUP BY COALESCE(m.group_first_membership_id, m.id)''',
                     dict(max_date=date.max.isoformat()),
                 )
             ],

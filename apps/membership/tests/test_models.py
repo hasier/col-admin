@@ -398,12 +398,12 @@ class TestMembershipPeriod(RequiresGeneralSetup):
             effective_until=date(2016, 12, 31),
             group_first_membership=membership,
         )
-        membership = factories.MembershipFactory(
+        factories.MembershipFactory(
             participant=participant1,
             tier=tier_no_renewal_no_vote,
             effective_from=date(2017, 1, 1),
             effective_until=date(2017, 12, 31),
-            group_first_membership=None,
+            group_first_membership=membership,
         )
         factories.MembershipFactory(
             participant=participant1,
@@ -417,7 +417,7 @@ class TestMembershipPeriod(RequiresGeneralSetup):
             tier=tier_renewal_vote,
             effective_from=date(2019, 1, 1),
             effective_until=date(2019, 12, 31),
-            group_first_membership=None,
+            group_first_membership=membership,
         )
 
         participant2 = factories.ParticipantFactory()
@@ -444,50 +444,24 @@ class TestMembershipPeriod(RequiresGeneralSetup):
         )
 
         assert list(
-            models.MembershipPeriod.objects.order_by(
-                'participant_id', 'effective_from', 'can_vote'
-            ).values()
+            models.MembershipPeriod.objects.order_by('participant_id', 'effective_from').values()
         ) == [
             {
                 'id': mock.ANY,
                 'participant_id': participant1.pk,
-                'can_vote': True,
                 'effective_from': date(2015, 1, 1),
-                'effective_until': date(2016, 12, 31),
-            },
-            {
-                'id': mock.ANY,
-                'participant_id': participant1.pk,
-                'can_vote': False,
-                'effective_from': date(2017, 1, 1),
-                'effective_until': date(2018, 12, 31),
-            },
-            {
-                'id': mock.ANY,
-                'participant_id': participant1.pk,
-                'can_vote': True,
-                'effective_from': date(2019, 1, 1),
                 'effective_until': date(2019, 12, 31),
             },
             {
                 'id': mock.ANY,
                 'participant_id': participant2.pk,
-                'can_vote': True,
                 'effective_from': date(2015, 1, 1),
                 'effective_until': date(2015, 12, 31),
             },
             {
                 'id': mock.ANY,
                 'participant_id': participant2.pk,
-                'can_vote': True,
                 'effective_from': date(2017, 1, 1),
-                'effective_until': date(2017, 12, 31),
-            },
-            {
-                'id': mock.ANY,
-                'participant_id': participant2.pk,
-                'can_vote': False,
-                'effective_from': date(2018, 1, 1),
                 'effective_until': date(2018, 12, 31),
             },
         ]
