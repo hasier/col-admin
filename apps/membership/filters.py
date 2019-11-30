@@ -23,11 +23,15 @@ class EligibleForVoteParticipantFilter(OnlyInputFilter):
         if not value:
             return queryset
 
-        date = datetime.strptime(value, '%d/%m/%Y').date()
+        try:
+            date = datetime.strptime(value, '%d/%m/%Y').date()
+        except ValueError:
+            return queryset.none()
+
         setup = GeneralSetup.get_for_date(date)
 
         if not setup:
-            return queryset
+            return queryset.none()
 
         return (
             (
