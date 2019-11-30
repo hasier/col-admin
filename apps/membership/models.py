@@ -9,7 +9,7 @@ from django.utils.dates import MONTHS
 from memoize import memoize
 
 from apps.membership.constants import PaymentMethod, TimeUnit
-from common.model_utils import Loggable
+from common.utils.model import Loggable
 
 
 class GeneralSetup(Loggable, models.Model):

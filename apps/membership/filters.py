@@ -5,7 +5,7 @@ from django.db.models.expressions import DurationValue, F, Value
 from django.db.models.functions import Coalesce
 
 from apps.membership.models import GeneralSetup
-from common.filters_utils import OnlyInputFilter
+from common.utils.filters import OnlyInputFilter
 from contrib.django.postgres.fields import DurationField
 
 

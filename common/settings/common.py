@@ -15,6 +15,9 @@ import os
 import dj_database_url
 import environ
 import sentry_sdk
+from allauth.account.apps import AccountConfig
+from allauth.socialaccount.apps import SocialAccountConfig
+from django.contrib.admin.apps import AdminConfig
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.apps import AuthConfig
 from material.admin.apps import MaterialConfig
@@ -26,11 +29,12 @@ env = environ.Env()
 # Site defaults
 AdminSite.site_title = 'Castellers of London'
 AdminSite.site_header = 'Castellers of London'
-MaterialConfig.default_site = 'apps.site.NoThemeMaterialAdminSite'
+MaterialConfig.default_site = 'apps.sites.default_site_override'
+AdminConfig.default_site = 'apps.sites.NoThemeMaterialAdminSite'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Development settings
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
@@ -86,7 +90,6 @@ SENDGRID_SANDBOX_MODE_IN_DEBUG = True
 
 # Application definition
 INSTALLED_APPS = [
-    'apps.users.apps.LoginConfig',
     'apps.membership.apps.MembershipConfig',
     'material.admin',
     'django.contrib.admin',
@@ -100,6 +103,19 @@ INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
     'memoize',
+    # allauth
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.instagram',
+    'allauth.socialaccount.providers.microsoft',
+    'allauth.socialaccount.providers.openid',
+    'allauth.socialaccount.providers.twitter',
+    # invitations
+    'invitations',
 ]
 
 MIDDLEWARE = [
@@ -163,9 +179,39 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-AUTHENTICATION_BACKENDS = ['apps.users.auth_backends.EmailBackend']
+# allauth
+SITE_ID = 1
+SOCIALACCOUNT_PROVIDERS = {
+    'facebook': {
+        'METHOD': 'oauth2',
+        'SCOPE': ['email', 'public_profile'],
+        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+        'INIT_PARAMS': {'cookie': True},
+        'FIELDS': ['id', 'email', 'name', 'first_name', 'last_name'],
+        'EXCHANGE_TOKEN': True,
+        'VERIFIED_EMAIL': False,
+        'VERSION': 'v2.12',
+    },
+    'google': {'SCOPE': ['profile', 'email'], 'AUTH_PARAMS': {'access_type': 'online'}},
+    'openid': {'SERVERS': [{'id': 'yahoo', 'name': 'Yahoo', 'openid_url': 'http://me.yahoo.com'}]},
+}
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    # 'django.contrib.auth.backends.ModelBackend',
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_VERIFICATION = False  # As long as signup remains invite only
 
-AUTH_USER_MODEL = 'users.User'
+# Invitations
+ACCOUNT_ADAPTER = 'invitations.models.InvitationsAdapter'
+INVITATIONS_INVITATION_ONLY = True
+INVITATIONS_ADAPTER = ACCOUNT_ADAPTER
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
@@ -197,3 +243,5 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Material
 AuthConfig.icon_name = 'lock'
+AccountConfig.icon_name = 'account_circle'
+SocialAccountConfig.icon_name = 'wifi_tethering'

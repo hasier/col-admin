@@ -4,17 +4,12 @@ from django.contrib.auth.views import (
     PasswordResetDoneView,
     PasswordResetView,
 )
-from django.templatetags.static import static
 from django.urls import include, path, re_path
-from django.utils.translation import ugettext_lazy as _
-from material.admin.sites import site
-
-site.site_header = _('Castellers of London')
-site.site_title = _('Castellers of London')
-site.favicon = static('CoL_Logo.png')
 
 urlpatterns = [
     path('admin/', include('material.admin.urls')),
+    path('accounts/', include('allauth.urls')),
+    path('invitations/', include('invitations.urls', namespace='invitations')),
     re_path(r'^admin/password_reset/$', PasswordResetView.as_view(), name='admin_password_reset'),
     re_path(
         r'^admin/password_reset/done/$',

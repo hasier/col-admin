@@ -1,4 +1,4 @@
-from .settings import *
+from .common import *
 
 DATABASES = {'default': dj_database_url.config(conn_max_age=500, env='TEST_DATABASE_URL')}
 if not DATABASES['default']:

@@ -17,13 +17,13 @@ from apps.membership.filters import EligibleForVoteParticipantFilter, RequiresAt
 from apps.membership.forms import AddMembershipForm, MembershipForm, ParticipantForm
 from apps.membership.formsets import ContactInfoInlineFormset
 from apps.membership.templatetags import membership
-from common.admin_utils import (
+from common.utils.admin import (
     AppendOnlyModelAdminMixin,
     RemoveDeleteActionMixin,
     TextAreaToInputMixin,
     ViewColumnMixin,
 )
-from common.form_utils import RequiredOnceInlineFormSet
+from common.utils.form import RequiredOnceInlineFormSet
 from contrib.material.admin.options import MaterialTabularInline
 
 

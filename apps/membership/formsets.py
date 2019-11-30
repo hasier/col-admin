@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.forms.fields import Field
 
-from common.form_utils import RequiredOnceInlineFormSet
+from common.utils.form import RequiredOnceInlineFormSet
 
 
 class ContactInfoInlineFormset(RequiredOnceInlineFormSet):
