@@ -42,16 +42,28 @@ class EligibleForVoteParticipantFilter(OnlyInputFilter):
                         output_field=DurationField(),
                     ),
                 ).filter(
-                    reference_date__range=(
-                        F('membership_periods__effective_from') + F('vote_interval'),
-                        Coalesce(
-                            'membership_periods__effective_until',
-                            Value(date.max, output_field=DateField()),
-                            output_field=DateField(),
-                        ),
+                    Q(
+                        reference_date__range=(
+                            F('membership_periods__effective_from') + F('vote_interval'),
+                            Coalesce(
+                                'membership_periods__effective_until',
+                                Value(date.max, output_field=DateField()),
+                                output_field=DateField(),
+                            ),
+                        )
                     ),
+                    Q(
+                        reference_date__range=(
+                            F('memberships__effective_from'),
+                            Coalesce(
+                                'memberships__effective_until',
+                                Value(date.max, output_field=DateField()),
+                                output_field=DateField(),
+                            ),
+                        )
+                    ),
+                    memberships__tier__can_vote=True,
                     reference_date__gte=F('min_age') + F('date_of_birth'),
-                    membership_periods__can_vote=True,
                 )
             )
             .order_by('id', '-membership_periods__effective_from')

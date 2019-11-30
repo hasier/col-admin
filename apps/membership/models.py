@@ -247,7 +247,7 @@ class Membership(Loggable, models.Model):
             if self.tier.needs_renewal:
                 self.effective_until = GeneralSetup.get_for_date(
                     self.effective_from
-                ).get_next_renewal(self.effective_from)
+                ).get_next_renewal(self.effective_from) - relativedelta(days=1)
 
         super(Membership, self).save(
             force_insert=force_insert,

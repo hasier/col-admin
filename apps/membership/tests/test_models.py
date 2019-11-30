@@ -11,16 +11,6 @@ from apps.membership.tests import factories
 pytestmark = pytest.mark.django_db
 
 
-@pytest.fixture(autouse=True)
-def clear_memoize():
-    yield
-    models.GeneralSetup.get_last.delete_memoized()
-    models.GeneralSetup.get_for_date.delete_memoized()
-    models.GeneralSetup.get_current.delete_memoized()
-    models.GeneralSetup.get_next.delete_memoized()
-    models.GeneralSetup.get_previous.delete_memoized()
-
-
 @pytest.fixture
 def usable_from():
     return date(2019, 1, 1)
@@ -218,15 +208,15 @@ class TestMembership(RequiresGeneralSetup):
         [
             # In range
             (date(2019, 1, 1), None, True),
-            (date(2019, 1, 1), date(2020, 1, 1), True),
+            (date(2019, 1, 1), date(2019, 12, 31), True),
             (date(2019, 11, 1), None, True),
-            (date(2019, 11, 1), date(2020, 11, 1), True),
+            (date(2019, 11, 1), date(2020, 10, 31), True),
             # Future
             (date(2020, 1, 1), None, False),
-            (date(2020, 1, 1), date(2020, 11, 1), False),
+            (date(2020, 1, 1), date(2020, 10, 31), False),
             # Past
-            (date(2018, 1, 1), date(2019, 10, 1), False),
-            (date(2018, 1, 1), date(2019, 11, 1), False),
+            (date(2018, 1, 1), date(2019, 9, 30), False),
+            (date(2018, 1, 1), date(2019, 10, 31), False),
         ],
     )
     def test_is_active_on(self, effective_from, effective_until, expected_result):
@@ -240,15 +230,15 @@ class TestMembership(RequiresGeneralSetup):
         [
             # In range
             (date(2019, 1, 1), None, True),
-            (date(2019, 1, 1), date(2020, 1, 1), True),
+            (date(2019, 1, 1), date(2019, 12, 31), True),
             (date(2019, 11, 1), None, True),
-            (date(2019, 11, 1), date(2020, 11, 1), True),
+            (date(2019, 11, 1), date(2020, 10, 31), True),
             # Future
             (date(2020, 1, 1), None, False),
-            (date(2020, 1, 1), date(2020, 11, 1), False),
+            (date(2020, 1, 1), date(2020, 10, 31), False),
             # Past
-            (date(2018, 1, 1), date(2019, 10, 1), False),
-            (date(2018, 1, 1), date(2019, 11, 1), False),
+            (date(2018, 1, 1), date(2019, 9, 30), False),
+            (date(2018, 1, 1), date(2019, 10, 31), False),
         ],
     )
     @freeze_time(time_to_freeze=datetime(2019, 11, 1))
@@ -259,7 +249,7 @@ class TestMembership(RequiresGeneralSetup):
         assert membership.is_active is expected_result
 
     @pytest.mark.parametrize(
-        ['renewing_tier', 'expected_until'], [(True, date(2020, 1, 1)), (False, None)]
+        ['renewing_tier', 'expected_until'], [(True, date(2019, 12, 31)), (False, None)]
     )
     def test_save_new(self, usable_from, renewing_tier, expected_until):
         membership = models.Membership.objects.create(
@@ -306,9 +296,9 @@ class TestMembership(RequiresGeneralSetup):
     @pytest.mark.parametrize(
         ['renewing_tier_previous', 'renewing_tier_new', 'expected_until'],
         [
-            (True, True, date(2021, 1, 1)),
+            (True, True, date(2020, 12, 31)),
             (True, False, None),
-            (False, True, date(2021, 1, 1)),
+            (False, True, date(2020, 12, 31)),
             (False, False, None),
         ],
     )
@@ -322,7 +312,7 @@ class TestMembership(RequiresGeneralSetup):
                 needs_renewal=renewing_tier_previous, can_vote=can_vote, usable_from=usable_from
             ),
             effective_from=date(2019, 1, 1),
-            effective_until=date(2020, 1, 1),
+            effective_until=date(2019, 12, 31),
         )
         membership = models.Membership.objects.create(
             participant=participant,
@@ -342,9 +332,9 @@ class TestMembership(RequiresGeneralSetup):
     @pytest.mark.parametrize(
         ['renewing_tier_previous', 'renewing_tier_new', 'expected_until'],
         [
-            (True, True, date(2021, 1, 1)),
+            (True, True, date(2020, 12, 31)),
             (True, False, None),
-            (False, True, date(2021, 1, 1)),
+            (False, True, date(2020, 12, 31)),
             (False, False, None),
         ],
     )
@@ -363,7 +353,7 @@ class TestMembership(RequiresGeneralSetup):
                 needs_renewal=renewing_tier_previous, usable_from=usable_from
             ),
             effective_from=date(2019, 1, 1),
-            effective_until=date(2020, 1, 1),
+            effective_until=date(2019, 12, 31),
         )
         membership = models.Membership.objects.create(
             participant=participant,
@@ -398,35 +388,35 @@ class TestMembershipPeriod(RequiresGeneralSetup):
             participant=participant1,
             tier=tier_renewal_vote,
             effective_from=date(2015, 1, 1),
-            effective_until=date(2016, 1, 1),
+            effective_until=date(2015, 12, 31),
             group_first_membership=None,
         )
         factories.MembershipFactory(
             participant=participant1,
             tier=tier_no_renewal_vote,
             effective_from=date(2016, 1, 1),
-            effective_until=date(2017, 1, 1),
+            effective_until=date(2016, 12, 31),
             group_first_membership=membership,
         )
         membership = factories.MembershipFactory(
             participant=participant1,
             tier=tier_no_renewal_no_vote,
             effective_from=date(2017, 1, 1),
-            effective_until=date(2018, 1, 1),
+            effective_until=date(2017, 12, 31),
             group_first_membership=None,
         )
         factories.MembershipFactory(
             participant=participant1,
             tier=tier_renewal_no_vote,
             effective_from=date(2018, 1, 1),
-            effective_until=date(2019, 1, 1),
+            effective_until=date(2018, 12, 31),
             group_first_membership=membership,
         )
         factories.MembershipFactory(
             participant=participant1,
             tier=tier_renewal_vote,
             effective_from=date(2019, 1, 1),
-            effective_until=date(2020, 1, 1),
+            effective_until=date(2019, 12, 31),
             group_first_membership=None,
         )
 
@@ -435,21 +425,21 @@ class TestMembershipPeriod(RequiresGeneralSetup):
             participant=participant2,
             tier=tier_renewal_vote,
             effective_from=date(2015, 1, 1),
-            effective_until=date(2016, 1, 1),
+            effective_until=date(2015, 12, 31),
             group_first_membership=None,
         )
         membership = factories.MembershipFactory(
             participant=participant2,
             tier=tier_renewal_vote,
             effective_from=date(2017, 1, 1),
-            effective_until=date(2018, 1, 1),
+            effective_until=date(2017, 12, 31),
             group_first_membership=None,
         )
         factories.MembershipFactory(
             participant=participant2,
             tier=tier_renewal_no_vote,
             effective_from=date(2018, 1, 1),
-            effective_until=date(2019, 1, 1),
+            effective_until=date(2018, 12, 31),
             group_first_membership=membership,
         )
 
@@ -463,41 +453,41 @@ class TestMembershipPeriod(RequiresGeneralSetup):
                 'participant_id': participant1.pk,
                 'can_vote': True,
                 'effective_from': date(2015, 1, 1),
-                'effective_until': date(2017, 1, 1),
+                'effective_until': date(2016, 12, 31),
             },
             {
                 'id': mock.ANY,
                 'participant_id': participant1.pk,
                 'can_vote': False,
                 'effective_from': date(2017, 1, 1),
-                'effective_until': date(2019, 1, 1),
+                'effective_until': date(2018, 12, 31),
             },
             {
                 'id': mock.ANY,
                 'participant_id': participant1.pk,
                 'can_vote': True,
                 'effective_from': date(2019, 1, 1),
-                'effective_until': date(2020, 1, 1),
+                'effective_until': date(2019, 12, 31),
             },
             {
                 'id': mock.ANY,
                 'participant_id': participant2.pk,
                 'can_vote': True,
                 'effective_from': date(2015, 1, 1),
-                'effective_until': date(2016, 1, 1),
+                'effective_until': date(2015, 12, 31),
             },
             {
                 'id': mock.ANY,
                 'participant_id': participant2.pk,
                 'can_vote': True,
                 'effective_from': date(2017, 1, 1),
-                'effective_until': date(2018, 1, 1),
+                'effective_until': date(2017, 12, 31),
             },
             {
                 'id': mock.ANY,
                 'participant_id': participant2.pk,
                 'can_vote': False,
                 'effective_from': date(2018, 1, 1),
-                'effective_until': date(2019, 1, 1),
+                'effective_until': date(2018, 12, 31),
             },
         ]
