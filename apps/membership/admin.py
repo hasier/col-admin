@@ -2,14 +2,12 @@ import sys
 from urllib.parse import urlencode
 
 from django.contrib import admin
-from django.contrib.admin import helpers
+from django.contrib.admin import helpers, register
 from django.contrib.admin.options import get_content_type_for_model
 from django.db.models.fields import TextField
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import path, reverse
-from material.admin.decorators import register
-from material.admin.options import MaterialModelAdmin
 
 from apps.membership import forms, models
 from apps.membership.constants import TimeUnit
@@ -88,7 +86,7 @@ class ContactInfoInline(TextAreaToInputMixin, MaterialTabularInline):
 
 
 @register(models.Family)
-class FamilyAdmin(RequiresInitModelAdmin, TextAreaToInputMixin, MaterialModelAdmin):
+class FamilyAdmin(RequiresInitModelAdmin, TextAreaToInputMixin, admin.ModelAdmin):
     icon_name = 'child_friendly'
 
     actions = None
@@ -128,7 +126,7 @@ generate_participant_table.short_description = "Generate participant PDF"
 
 @register(models.Participant)
 class ParticipantAdmin(
-    RequiresInitModelAdmin, RemoveDeleteActionMixin, TextAreaToInputMixin, MaterialModelAdmin
+    RequiresInitModelAdmin, RemoveDeleteActionMixin, TextAreaToInputMixin, admin.ModelAdmin
 ):
     icon_name = 'person_outline'
 
@@ -180,7 +178,7 @@ class MembershipPaymentInline(MaterialTabularInline):
 
 
 @register(models.Membership)
-class MembershipAdmin(RequiresInitModelAdmin, AppendOnlyModelAdminMixin, MaterialModelAdmin):
+class MembershipAdmin(RequiresInitModelAdmin, AppendOnlyModelAdminMixin, admin.ModelAdmin):
     icon_name = 'card_membership'
 
     form = MembershipForm
@@ -295,7 +293,7 @@ class MembershipAdmin(RequiresInitModelAdmin, AppendOnlyModelAdminMixin, Materia
 
 
 @register(models.Tier)
-class TierAdmin(RequiresInitModelAdmin, TextAreaToInputMixin, MaterialModelAdmin):
+class TierAdmin(RequiresInitModelAdmin, TextAreaToInputMixin, admin.ModelAdmin):
     icon_name = 'layers'
 
     list_display = [
@@ -337,7 +335,7 @@ class TierAdmin(RequiresInitModelAdmin, TextAreaToInputMixin, MaterialModelAdmin
 
 
 @register(models.MemberType)
-class MemberTypeAdmin(RequiresInitModelAdmin, TextAreaToInputMixin, MaterialModelAdmin):
+class MemberTypeAdmin(RequiresInitModelAdmin, TextAreaToInputMixin, admin.ModelAdmin):
     icon_name = 'people_outline'
 
     area_to_input_field_names = ['type_name']
@@ -356,7 +354,7 @@ class MemberTypeAdmin(RequiresInitModelAdmin, TextAreaToInputMixin, MaterialMode
 
 
 @register(models.GeneralSetup)
-class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModelAdminMixin, MaterialModelAdmin):
+class GeneralSetupAdmin(ViewColumnMixin, AppendOnlyModelAdminMixin, admin.ModelAdmin):
     icon_name = 'settings'
 
     actions = None

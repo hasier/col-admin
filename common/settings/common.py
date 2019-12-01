@@ -15,12 +15,8 @@ import os
 import dj_database_url
 import environ
 import sentry_sdk
-from allauth.account.apps import AccountConfig
-from allauth.socialaccount.apps import SocialAccountConfig
-from django.contrib.admin.apps import AdminConfig
 from django.contrib.admin.sites import AdminSite
-from django.contrib.auth.apps import AuthConfig
-from material.admin.apps import MaterialConfig
+from material.admin.default.apps import DefaultMaterialConfig
 from sentry_sdk.integrations.django import DjangoIntegration
 
 logger = logging.getLogger(__name__)
@@ -29,12 +25,11 @@ env = environ.Env()
 # Site defaults
 AdminSite.site_title = 'Castellers of London'
 AdminSite.site_header = 'Castellers of London'
-MaterialConfig.default_site = 'apps.sites.default_site_override'
-AdminConfig.default_site = 'apps.sites.NoThemeMaterialAdminSite'
+DefaultMaterialConfig.default_site = 'apps.sites.NoThemeMaterialAdminSite'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = BASE_DIR
 
 # Development settings
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
@@ -92,7 +87,7 @@ SENDGRID_SANDBOX_MODE_IN_DEBUG = True
 INSTALLED_APPS = [
     'apps.membership.apps.MembershipConfig',
     'material.admin',
-    'django.contrib.admin',
+    'material.admin.default',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -240,8 +235,3 @@ STATICFILES_DIRS = [
 # Simplified static file serving.
 # https://warehouse.python.org/project/whitenoise/
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# Material
-AuthConfig.icon_name = 'lock'
-AccountConfig.icon_name = 'account_circle'
-SocialAccountConfig.icon_name = 'wifi_tethering'
