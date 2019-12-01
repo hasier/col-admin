@@ -7,3 +7,6 @@ if not DATABASES['default']:
     )
 
 CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": ''}}
+
+# http://whitenoise.evans.io/en/stable/django.html#whitenoise-makes-my-tests-run-slow
+WHITENOISE_AUTOREFRESH = True
