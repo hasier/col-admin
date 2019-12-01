@@ -140,6 +140,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # Add each_context from admin sites to all views (used for allauth accounts)
+                'common.utils.context_processors.each_context',
             ],
             'libraries': {
                 'admin.admin_modify': 'templatetags.admin.admin_modify',
