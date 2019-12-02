@@ -15,9 +15,6 @@ import os
 import dj_database_url
 import environ
 import sentry_sdk
-from django.contrib.admin.sites import AdminSite
-from django.templatetags.static import static
-from django.utils.functional import SimpleLazyObject
 from material.admin.default.apps import DefaultMaterialConfig
 from sentry_sdk.integrations.django import DjangoIntegration
 
@@ -25,10 +22,28 @@ logger = logging.getLogger(__name__)
 env = environ.Env()
 
 # Site defaults
-AdminSite.site_title = 'Castellers of London'
-AdminSite.site_header = 'Castellers of London'
-AdminSite.favicon = SimpleLazyObject(lambda: static('CoL_Logo.png'))
 DefaultMaterialConfig.default_site = 'apps.sites.NoThemeMaterialAdminSite'
+
+MATERIAL_ADMIN_SITE = {
+    'HEADER': 'Castellers of London',
+    'TITLE': 'Castellers of London',
+    'FAVICON': 'CoL_Logo.png',
+    'SHOW_THEMES': False,
+    'APP_ICONS': {
+        'auth': 'lock',
+        'sites': 'web',
+        'invitations': 'send',
+        'account': 'account_circle',
+        'socialaccount': 'wifi_tethering',
+    },
+    'MODEL_ICONS': {
+        'user': 'person',
+        'group': 'people',
+        'site': 'web',
+        'invitation': 'send',
+        'emailaddress': 'email',
+    },
+}
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
