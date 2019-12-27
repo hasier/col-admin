@@ -10,3 +10,7 @@ CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"
 
 # http://whitenoise.evans.io/en/stable/django.html#whitenoise-makes-my-tests-run-slow
 WHITENOISE_AUTOREFRESH = True
+
+# Disable manifest to prevent "Missing staticfiles manifest entry for ..."
+# https://stackoverflow.com/a/51060143
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
